@@ -1,0 +1,553 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Emotion Training &amp; Evaluation System - Global Analytics</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2b6cee",
+              "background-light": "#f6f6f8",
+              "background-dark": "#101622",
+            },
+            fontFamily: {
+              display: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .chart-placeholder {
+        background: linear-gradient(
+          180deg,
+          rgba(43, 108, 238, 0.05) 0%,
+          rgba(43, 108, 238, 0) 100%
+        );
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display"
+  >
+    <div class="flex min-h-screen">
+      <!-- Sidebar Navigation -->
+      <aside
+        class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark flex flex-col sticky top-0 h-screen"
+      >
+        <div class="p-6 flex items-center gap-3">
+          <div class="bg-primary rounded-lg p-1.5 text-white">
+            <span class="material-symbols-outlined text-2xl">psychology</span>
+          </div>
+          <div>
+            <h1 class="text-sm font-bold tracking-tight">EMOTION AI</h1>
+            <p
+              class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold"
+            >
+              Admin Portal
+            </p>
+          </div>
+        </div>
+        <nav class="flex-1 px-4 space-y-1">
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            href="#"
+          >
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="text-sm font-medium">Dashboard</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg"
+            href="#"
+          >
+            <span class="material-symbols-outlined">analytics</span>
+            <span class="text-sm font-medium">Global Analytics</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            href="#"
+          >
+            <span class="material-symbols-outlined">group</span>
+            <span class="text-sm font-medium">User Data</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            href="#"
+          >
+            <span class="material-symbols-outlined">school</span>
+            <span class="text-sm font-medium">Training Modules</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            href="#"
+          >
+            <span class="material-symbols-outlined">settings</span>
+            <span class="text-sm font-medium">System Settings</span>
+          </a>
+        </nav>
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+          <div
+            class="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-900 rounded-xl"
+          >
+            <div
+              class="size-8 rounded-full bg-slate-200 dark:bg-slate-700"
+              data-alt="User profile picture for administrator"
+              style="
+                background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuDDJDZBHLCCtx5285Fk8RQql99ZmAVl3IBF512FhRsq99l7UkE65NqeqgPiDcStuj5Kc289eWpkFkPCE4NRwUPhdYA9zPilSI_OLi03xhMwVPNBJmNsuPSoK7Ms8JGQPPnx98RXHAXgm8cSAcNOuOvunTSd8SaSAyZKzO8Vc1b7jpfwK8fssQlVwpPIqGloC2NDc0q3PRcoK76K4pEn4JpV2X8x_c5PvZciWocSmF8ay7CGoY9_LhIdoaTh-23T0VOdcBvQqaMH3Xql&quot;);
+              "
+            ></div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold truncate">Dr. Aris Thorne</p>
+              <p class="text-[10px] text-slate-500 truncate">
+                System Oversight
+              </p>
+            </div>
+            <span class="material-symbols-outlined text-slate-400 text-sm"
+              >logout</span
+            >
+          </div>
+        </div>
+      </aside>
+      <!-- Main Content Area -->
+      <main class="flex-1 flex flex-col overflow-y-auto">
+        <!-- Header -->
+        <header
+          class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-10 px-8 flex items-center justify-between"
+        >
+          <h2 class="text-lg font-bold">Global Analytics Overview</h2>
+          <div class="flex items-center gap-4">
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                >search</span
+              >
+              <input
+                class="pl-9 pr-4 py-1.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/50"
+                placeholder="Search data points..."
+                type="text"
+              />
+            </div>
+            <button
+              class="size-9 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+            >
+              <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <div class="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
+            <button
+              class="flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-semibold"
+            >
+              <span class="material-symbols-outlined text-sm">download</span>
+              Export Report
+            </button>
+          </div>
+        </header>
+        <!-- Dashboard Content -->
+        <div class="p-8 space-y-8">
+          <!-- KPIs -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div
+              class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+            >
+              <p
+                class="text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                Total Sessions
+              </p>
+              <div class="mt-2 flex items-end justify-between">
+                <h3 class="text-2xl font-bold">12,840</h3>
+                <span
+                  class="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-full flex items-center gap-1"
+                >
+                  <span class="material-symbols-outlined text-xs"
+                    >trending_up</span
+                  >
+                  12%
+                </span>
+              </div>
+            </div>
+            <div
+              class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+            >
+              <p
+                class="text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                Avg. Accuracy
+              </p>
+              <div class="mt-2 flex items-end justify-between">
+                <h3 class="text-2xl font-bold">84.2%</h3>
+                <span
+                  class="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-full flex items-center gap-1"
+                >
+                  <span class="material-symbols-outlined text-xs"
+                    >trending_up</span
+                  >
+                  3.1%
+                </span>
+              </div>
+            </div>
+            <div
+              class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+            >
+              <p
+                class="text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                Mean Reaction Time
+              </p>
+              <div class="mt-2 flex items-end justify-between">
+                <h3 class="text-2xl font-bold">1.24s</h3>
+                <span
+                  class="text-orange-500 text-xs font-bold bg-orange-500/10 px-2 py-1 rounded-full flex items-center gap-1"
+                >
+                  <span class="material-symbols-outlined text-xs"
+                    >trending_down</span
+                  >
+                  5.2%
+                </span>
+              </div>
+            </div>
+            <div
+              class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+            >
+              <p
+                class="text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                Active Modules
+              </p>
+              <div class="mt-2 flex items-end justify-between">
+                <h3 class="text-2xl font-bold">24</h3>
+                <span
+                  class="text-slate-500 text-xs font-bold bg-slate-500/10 px-2 py-1 rounded-full"
+                  >Static</span
+                >
+              </div>
+            </div>
+          </div>
+          <!-- Row 1: Line Chart and Performance Insights -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div
+              class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+            >
+              <div class="flex items-center justify-between mb-6">
+                <h4 class="font-bold">Global Emotion Accuracy Trends</h4>
+                <select
+                  class="text-xs border-slate-200 dark:border-slate-800 bg-transparent rounded-lg focus:ring-primary"
+                >
+                  <option>Last 30 Days</option>
+                  <option>Last 6 Months</option>
+                </select>
+              </div>
+              <div
+                class="h-64 chart-placeholder relative rounded-lg border border-dashed border-slate-200 dark:border-slate-800 flex items-end justify-center px-4 pb-4"
+              >
+                <!-- Simulated Line Chart -->
+                <svg
+                  class="w-full h-full"
+                  preserveaspectratio="none"
+                  viewbox="0 0 400 100"
+                >
+                  <path
+                    d="M0,80 Q50,60 100,70 T200,40 T300,50 T400,20"
+                    fill="none"
+                    stroke="#2b6cee"
+                    stroke-width="2"
+                    vector-effect="non-scaling-stroke"
+                  ></path>
+                  <path
+                    d="M0,80 Q50,60 100,70 T200,40 T300,50 T400,20 V100 H0 Z"
+                    fill="url(#grad1)"
+                    vector-effect="non-scaling-stroke"
+                  ></path>
+                  <defs>
+                    <lineargradient
+                      id="grad1"
+                      x1="0%"
+                      x2="0%"
+                      y1="0%"
+                      y2="100%"
+                    >
+                      <stop
+                        offset="0%"
+                        style="
+                          stop-color: rgba(43, 108, 238, 0.2);
+                          stop-opacity: 1;
+                        "
+                      ></stop>
+                      <stop
+                        offset="100%"
+                        style="
+                          stop-color: rgba(43, 108, 238, 0);
+                          stop-opacity: 1;
+                        "
+                      ></stop>
+                    </lineargradient>
+                  </defs>
+                </svg>
+                <div
+                  class="absolute bottom-4 left-0 w-full flex justify-between px-8 text-[10px] text-slate-400 font-medium"
+                >
+                  <span>01 OCT</span><span>07 OCT</span><span>14 OCT</span
+                  ><span>21 OCT</span><span>28 OCT</span>
+                </div>
+              </div>
+            </div>
+            <div
+              class="bg-primary/5 dark:bg-primary/10 p-6 rounded-xl border border-primary/20 flex flex-col"
+            >
+              <h4 class="font-bold text-primary mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined">lightbulb</span>
+                Performance Insights
+              </h4>
+              <div class="space-y-4 flex-1">
+                <div
+                  class="bg-white/50 dark:bg-slate-900/50 p-3 rounded-lg border border-primary/10"
+                >
+                  <p
+                    class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1"
+                  >
+                    Peak Accuracy Window
+                  </p>
+                  <p
+                    class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"
+                  >
+                    System performance peaks between 09:00 - 11:00 UTC,
+                    correlating with fresh user attention spans.
+                  </p>
+                </div>
+                <div
+                  class="bg-white/50 dark:bg-slate-900/50 p-3 rounded-lg border border-primary/10"
+                >
+                  <p
+                    class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1"
+                  >
+                    Emotion Fatigue
+                  </p>
+                  <p
+                    class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"
+                  >
+                    Sessions exceeding 15 mins show a 22% drop in accuracy for
+                    subtle micro-expressions.
+                  </p>
+                </div>
+                <div
+                  class="bg-white/50 dark:bg-slate-900/50 p-3 rounded-lg border border-primary/10"
+                >
+                  <p
+                    class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1"
+                  >
+                    Adaptive Success
+                  </p>
+                  <p
+                    class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"
+                  >
+                    Version 2.4 adaptive algorithms improved accuracy for
+                    "Disgust" recognition by 14%.
+                  </p>
+                </div>
+              </div>
+              <button
+                class="mt-4 text-xs font-bold text-primary hover:underline"
+              >
+                View Detailed Diagnostics →
+              </button>
+            </div>
+          </div>
+          <!-- Row 2: Heatmap and Histogram -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Emotion Confusion Heatmap -->
+            <div
+              class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+            >
+              <div class="mb-6">
+                <h4 class="font-bold">Emotion Confusion Heatmap</h4>
+                <p class="text-xs text-slate-500">
+                  Correlation between target emotion vs. predicted response
+                </p>
+              </div>
+              <div
+                class="grid grid-cols-6 grid-rows-6 gap-1 aspect-square max-w-[300px] mx-auto"
+              >
+                <!-- Heatmap cells with varying opacity based on primary color -->
+                <div class="bg-primary/90 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/80 rounded-sm"></div>
+                <div class="bg-primary/20 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/20 rounded-sm"></div>
+                <div class="bg-primary/90 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/70 rounded-sm"></div>
+                <div class="bg-primary/40 rounded-sm"></div>
+                <div class="bg-primary/20 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/30 rounded-sm"></div>
+                <div class="bg-primary/80 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/5 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/10 rounded-sm"></div>
+                <div class="bg-primary/90 rounded-sm"></div>
+              </div>
+              <div
+                class="mt-4 flex justify-center gap-4 text-[10px] font-semibold text-slate-400 uppercase tracking-tighter"
+              >
+                <span>Anger</span><span>Joy</span><span>Fear</span
+                ><span>Surprise</span><span>Sadness</span><span>Disgust</span>
+              </div>
+            </div>
+            <!-- Average Reaction Time Histogram -->
+            <div
+              class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+            >
+              <div class="mb-6">
+                <h4 class="font-bold">Reaction Time Distribution</h4>
+                <p class="text-xs text-slate-500">
+                  Frequency distribution of response latency (seconds)
+                </p>
+              </div>
+              <div
+                class="h-64 flex items-end gap-1 px-2 pb-8 border-b border-l border-slate-100 dark:border-slate-800"
+              >
+                <div class="bg-primary/20 w-full h-[15%] rounded-t-sm"></div>
+                <div class="bg-primary/30 w-full h-[30%] rounded-t-sm"></div>
+                <div class="bg-primary/50 w-full h-[55%] rounded-t-sm"></div>
+                <div class="bg-primary/80 w-full h-[85%] rounded-t-sm"></div>
+                <div class="bg-primary w-full h-[95%] rounded-t-sm"></div>
+                <div class="bg-primary/80 w-full h-[70%] rounded-t-sm"></div>
+                <div class="bg-primary/60 w-full h-[45%] rounded-t-sm"></div>
+                <div class="bg-primary/40 w-full h-[25%] rounded-t-sm"></div>
+                <div class="bg-primary/20 w-full h-[10%] rounded-t-sm"></div>
+                <div class="bg-primary/10 w-full h-[5%] rounded-t-sm"></div>
+              </div>
+              <div
+                class="mt-2 flex justify-between text-[10px] text-slate-400 px-1 font-medium"
+              >
+                <span>0.2s</span><span>0.8s</span><span>1.4s</span
+                ><span>2.0s</span><span>2.6s</span>
+              </div>
+            </div>
+          </div>
+          <!-- Row 3: Learning Performance Comparison -->
+          <div
+            class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            <div class="mb-8">
+              <h4 class="font-bold">
+                Adaptive Learning Performance Comparison
+              </h4>
+              <p class="text-xs text-slate-500">
+                Comparing Standard Curriculum vs. AI-Driven Adaptive Paths
+              </p>
+            </div>
+            <div class="space-y-6">
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold">
+                  <span>Adaptive Path (AI-Enabled)</span>
+                  <span class="text-primary">91% Mastery</span>
+                </div>
+                <div
+                  class="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-primary rounded-full"
+                    style="width: 91%"
+                  ></div>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold">
+                  <span>Standard Linear Path</span>
+                  <span class="text-slate-500">74% Mastery</span>
+                </div>
+                <div
+                  class="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-slate-400 rounded-full"
+                    style="width: 74%"
+                  ></div>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold">
+                  <span>Reference Benchmark (Industry)</span>
+                  <span class="text-slate-500">68% Mastery</span>
+                </div>
+                <div
+                  class="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-slate-300 dark:bg-slate-700 rounded-full"
+                    style="width: 68%"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Footer -->
+        <footer
+          class="p-8 border-t border-slate-200 dark:border-slate-800 mt-auto flex items-center justify-between text-[10px] text-slate-500 font-medium uppercase tracking-widest"
+        >
+          <p>
+            © 2024 Emotion Training &amp; Evaluation System - Research Division
+          </p>
+          <div class="flex gap-6">
+            <a class="hover:text-primary transition-colors" href="#"
+              >Documentation</a
+            >
+            <a class="hover:text-primary transition-colors" href="#"
+              >API Reference</a
+            >
+            <a class="hover:text-primary transition-colors" href="#"
+              >Privacy Policy</a
+            >
+          </div>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

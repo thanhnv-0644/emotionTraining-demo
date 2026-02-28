@@ -8,7 +8,6 @@ export default function AdminSidebar() {
   const navItems = [
     { name: 'Dashboard', icon: 'dashboard', href: '/admin' },
     { name: 'Manage Courses', icon: 'school', href: '/admin/courses' },
-    { name: 'Manage Lessons', icon: 'audio_file', href: '/admin/lessons' },
     { name: 'User Management', icon: 'group', href: '/admin/users' },
     { name: 'Analytics', icon: 'analytics', href: '/admin/analytics' },
   ];

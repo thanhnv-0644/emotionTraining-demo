@@ -104,9 +104,10 @@ export default function AdminCourses() {
                   <button className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                     Edit
                   </button>
-                  <button className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                    Analytics
-                  </button>
+                  <Link href={`/admin/courses/course-${i}/lessons`} className="flex-1 py-2 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors text-center flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-[16px]">audio_file</span>
+                    Lessons
+                  </Link>
                   <button className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                     <span className="material-symbols-outlined text-[20px]">more_vert</span>
                   </button>
