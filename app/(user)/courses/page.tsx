@@ -1,6 +1,79 @@
 import Link from 'next/link';
 
+interface Course {
+  id: string;
+  title: string;
+  module: string;
+  progress: number;
+  image: string;
+  category: string;
+  lessons: number;
+  duration: string;
+  completed: boolean;
+}
+
+const coursesData: Course[] = [
+  {
+    id: 'react-basics',
+    title: 'React Emotion Recognition',
+    module: 'Module 1',
+    progress: 100,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBli4ztgt2jf1CFIqvVhUS2ApjYj-bvD9jACDHcRxVtWKOrBwdke87hPtqp8nCT2SiwLfUsunyoO8r0Lz3V3skox6aocUUTzAvGjoE0_huIxaWyVSiR89JWQ35ySEuDThXL_3Xy1tDavbXSM8ltSB3GmhSHI3QBoMcBf0aznwePNYo41AG8ApaPR1sGQNoJA33WfGdMKgKqJRzxHbPdt15aKJIIJOHTaQfe1NPDf0bDPxepNIg4shTf-mU9uUC8lsIfvu9K9ZxxKE98',
+    category: 'Basics',
+    lessons: 5,
+    duration: '25m',
+    completed: true
+  },
+  {
+    id: 'nlp-advanced',
+    title: 'Advanced NLP Techniques',
+    module: 'Module 2',
+    progress: 65,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBli4ztgt2jf1CFIqvVhUS2ApjYj-bvD9jACDHcRxVtWKOrBwdke87hPtqp8nCT2SiwLfUsunyoO8r0Lz3V3skox6aocUUTzAvGjoE0_huIxaWyVSiR89JWQ35ySEuDThXL_3Xy1tDavbXSM8ltSB3GmhSHI3QBoMcBf0aznwePNYo41AG8ApaPR1sGQNoJA33WfGdMKgKqJRzxHbPdt15aKJIIJOHTaQfe1NPDf0bDPxepNIg4shTf-mU9uUC8lsIfvu9K9ZxxKE98',
+    category: 'Advanced',
+    lessons: 3,
+    duration: '24m',
+    completed: false
+  },
+  {
+    id: 'detection-cues',
+    title: 'Detecting Deception via Facial Cues',
+    module: 'Module 3',
+    progress: 0,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBli4ztgt2jf1CFIqvVhUS2ApjYj-bvD9jACDHcRxVtWKOrBwdke87hPtqp8nCT2SiwLfUsunyoO8r0Lz3V3skox6aocUUTzAvGjoE0_huIxaWyVSiR89JWQ35ySEuDThXL_3Xy1tDavbXSM8ltSB3GmhSHI3QBoMcBf0aznwePNYo41AG8ApaPR1sGQNoJA33WfGdMKgKqJRzxHbPdt15aKJIIJOHTaQfe1NPDf0bDPxepNIg4shTf-mU9uUC8lsIfvu9K9ZxxKE98',
+    category: 'Micro-expressions',
+    lessons: 8,
+    duration: '1h 45m',
+    completed: false
+  },
+  {
+    id: 'cultural-variations',
+    title: 'Cross-Cultural Emotion Variations',
+    module: 'Module 4',
+    progress: 20,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBli4ztgt2jf1CFIqvVhUS2ApjYj-bvD9jACDHcRxVtWKOrBwdke87hPtqp8nCT2SiwLfUsunyoO8r0Lz3V3skox6aocUUTzAvGjoE0_huIxaWyVSiR89JWQ35ySEuDThXL_3Xy1tDavbXSM8ltSB3GmhSHI3QBoMcBf0aznwePNYo41AG8ApaPR1sGQNoJA33WfGdMKgKqJRzxHbPdt15aKJIIJOHTaQfe1NPDf0bDPxepNIg4shTf-mU9uUC8lsIfvu9K9ZxxKE98',
+    category: 'Advanced',
+    lessons: 15,
+    duration: '4h 15m',
+    completed: false
+  },
+  {
+    id: 'vocal-analysis',
+    title: 'Vocal Nuances and Tone Analysis',
+    module: 'Module 5',
+    progress: 0,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBli4ztgt2jf1CFIqvVhUS2ApjYj-bvD9jACDHcRxVtWKOrBwdke87hPtqp8nCT2SiwLfUsunyoO8r0Lz3V3skox6aocUUTzAvGjoE0_huIxaWyVSiR89JWQ35ySEuDThXL_3Xy1tDavbXSM8ltSB3GmhSHI3QBoMcBf0aznwePNYo41AG8ApaPR1sGQNoJA33WfGdMKgKqJRzxHbPdt15aKJIIJOHTaQfe1NPDf0bDPxepNIg4shTf-mU9uUC8lsIfvu9K9ZxxKE98',
+    category: 'Audio',
+    lessons: 10,
+    duration: '2h 00m',
+    completed: false
+  }
+];
+
 export default function Courses() {
+  const inProgressCount = coursesData.filter(c => !c.completed && c.progress > 0).length;
+  const completedCount = coursesData.filter(c => c.completed).length;
+  
   return (
     <>
       <header className="h-16 flex items-center justify-between px-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 sticky top-0 z-10">
@@ -20,55 +93,14 @@ export default function Courses() {
       
       <div className="p-8 space-y-8">
         <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800">
-          <button className="px-4 py-3 text-sm font-bold text-primary border-b-2 border-primary">In Progress (3)</button>
-          <button className="px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-100">Completed (12)</button>
-          <button className="px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-100">Saved (5)</button>
+          <button className="px-4 py-3 text-sm font-bold text-primary border-b-2 border-primary">In Progress ({inProgressCount})</button>
+          <button className="px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-100">Completed ({completedCount})</button>
+          <button className="px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-100">Saved (0)</button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[
-            {
-              title: 'Foundations of Emotion Recognition',
-              module: 'Module 1',
-              progress: 100,
-              image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBli4ztgt2jf1CFIqvVhUS2ApjYj-bvD9jACDHcRxVtWKOrBwdke87hPtqp8nCT2SiwLfUsunyoO8r0Lz3V3skox6aocUUTzAvGjoE0_huIxaWyVSiR89JWQ35ySEuDThXL_3Xy1tDavbXSM8ltSB3GmhSHI3QBoMcBf0aznwePNYo41AG8ApaPR1sGQNoJA33WfGdMKgKqJRzxHbPdt15aKJIIJOHTaQfe1NPDf0bDPxepNIg4shTf-mU9uUC8lsIfvu9K9ZxxKE98',
-              category: 'Basics',
-              lessons: 12,
-              duration: '2h 30m',
-              completed: true
-            },
-            {
-              title: 'Detecting Deception via Facial Cues',
-              module: 'Module 4',
-              progress: 65,
-              image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBli4ztgt2jf1CFIqvVhUS2ApjYj-bvD9jACDHcRxVtWKOrBwdke87hPtqp8nCT2SiwLfUsunyoO8r0Lz3V3skox6aocUUTzAvGjoE0_huIxaWyVSiR89JWQ35ySEuDThXL_3Xy1tDavbXSM8ltSB3GmhSHI3QBoMcBf0aznwePNYo41AG8ApaPR1sGQNoJA33WfGdMKgKqJRzxHbPdt15aKJIIJOHTaQfe1NPDf0bDPxepNIg4shTf-mU9uUC8lsIfvu9K9ZxxKE98',
-              category: 'Micro-expressions',
-              lessons: 8,
-              duration: '1h 45m',
-              completed: false
-            },
-            {
-              title: 'Cross-Cultural Emotion Variations',
-              module: 'Module 5',
-              progress: 20,
-              image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBli4ztgt2jf1CFIqvVhUS2ApjYj-bvD9jACDHcRxVtWKOrBwdke87hPtqp8nCT2SiwLfUsunyoO8r0Lz3V3skox6aocUUTzAvGjoE0_huIxaWyVSiR89JWQ35ySEuDThXL_3Xy1tDavbXSM8ltSB3GmhSHI3QBoMcBf0aznwePNYo41AG8ApaPR1sGQNoJA33WfGdMKgKqJRzxHbPdt15aKJIIJOHTaQfe1NPDf0bDPxepNIg4shTf-mU9uUC8lsIfvu9K9ZxxKE98',
-              category: 'Advanced',
-              lessons: 15,
-              duration: '4h 15m',
-              completed: false
-            },
-            {
-              title: 'Vocal Nuances and Tone Analysis',
-              module: 'Module 6',
-              progress: 0,
-              image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBli4ztgt2jf1CFIqvVhUS2ApjYj-bvD9jACDHcRxVtWKOrBwdke87hPtqp8nCT2SiwLfUsunyoO8r0Lz3V3skox6aocUUTzAvGjoE0_huIxaWyVSiR89JWQ35ySEuDThXL_3Xy1tDavbXSM8ltSB3GmhSHI3QBoMcBf0aznwePNYo41AG8ApaPR1sGQNoJA33WfGdMKgKqJRzxHbPdt15aKJIIJOHTaQfe1NPDf0bDPxepNIg4shTf-mU9uUC8lsIfvu9K9ZxxKE98',
-              category: 'Audio',
-              lessons: 10,
-              duration: '2h 00m',
-              completed: false
-            }
-          ].map((course, i) => (
-            <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
+          {coursesData.map((course) => (
+            <div key={course.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
               <div className="h-48 relative bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <div className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500" style={{ backgroundImage: `url('${course.image}')` }}></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -104,7 +136,7 @@ export default function Courses() {
                   </div>
                 )}
                 
-                <Link href="/practice" className={`w-full py-2.5 rounded-lg text-sm font-bold text-center transition-colors ${
+                <Link href={`/courses/${course.id}`} className={`w-full py-2.5 rounded-lg text-sm font-bold text-center transition-colors ${
                   course.completed 
                     ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700' 
                     : course.progress > 0 

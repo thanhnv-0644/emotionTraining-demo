@@ -1,0 +1,504 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Lesson Results - Emotion Training &amp; Evaluation</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2b6cee",
+              secondary: "#7c3aed",
+              "background-light": "#f6f6f8",
+              "background-dark": "#101622",
+            },
+            fontFamily: {
+              display: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .material-symbols-outlined {
+        font-size: 24px;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display"
+  >
+    <div
+      class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden"
+    >
+      <!-- Top Navigation Bar -->
+      <header
+        class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-6 md:px-10 py-4 sticky top-0 z-10"
+      >
+        <div class="flex items-center gap-3">
+          <div class="bg-primary text-white p-2 rounded-lg">
+            <span class="material-symbols-outlined">psychology</span>
+          </div>
+          <h2 class="text-xl font-bold tracking-tight">Results: Emotion Lab</h2>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="hidden md:flex flex-col items-end">
+            <span
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >Session ID</span
+            >
+            <span class="text-sm font-medium">#ERS-88219</span>
+          </div>
+          <button
+            class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+          >
+            <span class="material-symbols-outlined">share</span>
+          </button>
+        </div>
+      </header>
+      <main class="max-w-6xl mx-auto w-full px-4 py-8 space-y-8">
+        <!-- Hero Success Message -->
+        <div
+          class="flex flex-col md:flex-row justify-between items-center gap-6 bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+        >
+          <div class="flex flex-col gap-2 text-center md:text-left">
+            <span
+              class="inline-flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-widest"
+            >
+              <span class="material-symbols-outlined text-sm">verified</span>
+              Session Complete
+            </span>
+            <h1 class="text-4xl font-black tracking-tight">Fantastic Work!</h1>
+            <p class="text-slate-500 dark:text-slate-400">
+              You've mastered nuances in "Subtle Frustration" audio cues.
+            </p>
+          </div>
+          <div class="flex gap-3">
+            <button
+              class="px-6 py-3 rounded-lg border border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+            >
+              Review Lesson
+            </button>
+            <button
+              class="px-6 py-3 rounded-lg bg-primary text-white font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
+            >
+              Next Lesson
+            </button>
+          </div>
+        </div>
+        <!-- High-Level Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            class="bg-gradient-to-br from-primary to-primary/80 p-6 rounded-xl text-white shadow-lg"
+          >
+            <p class="text-primary-100 text-sm font-medium opacity-80">
+              Overall Score
+            </p>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span class="text-4xl font-black">92%</span>
+              <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full"
+                >+4% vs last</span
+              >
+            </div>
+          </div>
+          <div
+            class="bg-gradient-to-br from-secondary to-secondary/80 p-6 rounded-xl text-white shadow-lg"
+          >
+            <p class="text-secondary-100 text-sm font-medium opacity-80">
+              XP Earned
+            </p>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span class="text-4xl font-black">+850</span>
+              <span class="text-sm font-bold">XP</span>
+            </div>
+          </div>
+          <div
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-xl shadow-sm"
+          >
+            <div class="flex items-center gap-3 text-slate-500 mb-2">
+              <span class="material-symbols-outlined text-primary">timer</span>
+              <span class="text-sm font-medium">Avg Speed</span>
+            </div>
+            <p class="text-3xl font-bold">1.8s</p>
+          </div>
+          <div
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-xl shadow-sm"
+          >
+            <div class="flex items-center gap-3 text-slate-500 mb-2">
+              <span class="material-symbols-outlined text-orange-500"
+                >local_fire_department</span
+              >
+              <span class="text-sm font-medium">Highest Streak</span>
+            </div>
+            <p class="text-3xl font-bold">
+              14 <span class="text-sm font-normal text-slate-400">hits</span>
+            </p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Audio Clip Breakdown -->
+          <div class="lg:col-span-2 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-bold">Session Breakdown</h3>
+              <div
+                class="flex items-center gap-2 text-xs font-semibold text-slate-500"
+              >
+                <span class="flex items-center gap-1"
+                  ><span class="w-2 h-2 rounded-full bg-green-500"></span>
+                  Correct</span
+                >
+                <span class="flex items-center gap-1"
+                  ><span class="w-2 h-2 rounded-full bg-red-500"></span>
+                  Incorrect</span
+                >
+              </div>
+            </div>
+            <div
+              class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
+            >
+              <table class="w-full text-left">
+                <thead
+                  class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800"
+                >
+                  <tr>
+                    <th
+                      class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500"
+                    >
+                      Clip
+                    </th>
+                    <th
+                      class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500"
+                    >
+                      Your Choice
+                    </th>
+                    <th
+                      class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500"
+                    >
+                      Correct Answer
+                    </th>
+                    <th
+                      class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500"
+                    >
+                      AI Conf.
+                    </th>
+                    <th
+                      class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-center"
+                    >
+                      Result
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <!-- Row 1 -->
+                  <tr
+                    class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                  >
+                    <td class="px-6 py-4">
+                      <button
+                        class="p-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20"
+                      >
+                        <span class="material-symbols-outlined text-lg"
+                          >play_arrow</span
+                        >
+                      </button>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-amber-500"
+                          >sentiment_dissatisfied</span
+                        >
+                        <span class="text-sm font-medium">Frustrated</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span
+                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-bold border border-green-200 dark:border-green-800"
+                        >Frustrated</span
+                      >
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium">98.2%</td>
+                    <td class="px-6 py-4 text-center">
+                      <span class="material-symbols-outlined text-green-500"
+                        >check_circle</span
+                      >
+                    </td>
+                  </tr>
+                  <!-- Row 2 -->
+                  <tr
+                    class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                  >
+                    <td class="px-6 py-4">
+                      <button
+                        class="p-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20"
+                      >
+                        <span class="material-symbols-outlined text-lg"
+                          >play_arrow</span
+                        >
+                      </button>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-blue-500"
+                          >sentiment_neutral</span
+                        >
+                        <span class="text-sm font-medium">Neutral</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span
+                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-bold border border-green-200 dark:border-green-800"
+                        >Disappointed</span
+                      >
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium">62.1%</td>
+                    <td class="px-6 py-4 text-center">
+                      <span class="material-symbols-outlined text-red-500"
+                        >cancel</span
+                      >
+                    </td>
+                  </tr>
+                  <!-- Row 3 -->
+                  <tr
+                    class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                  >
+                    <td class="px-6 py-4">
+                      <button
+                        class="p-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20"
+                      >
+                        <span class="material-symbols-outlined text-lg"
+                          >play_arrow</span
+                        >
+                      </button>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-green-500"
+                          >sentiment_very_satisfied</span
+                        >
+                        <span class="text-sm font-medium">Excited</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span
+                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-bold border border-green-200 dark:border-green-800"
+                        >Excited</span
+                      >
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium">94.5%</td>
+                    <td class="px-6 py-4 text-center">
+                      <span class="material-symbols-outlined text-green-500"
+                        >check_circle</span
+                      >
+                    </td>
+                  </tr>
+                  <!-- Row 4 -->
+                  <tr
+                    class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                  >
+                    <td class="px-6 py-4">
+                      <button
+                        class="p-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20"
+                      >
+                        <span class="material-symbols-outlined text-lg"
+                          >play_arrow</span
+                        >
+                      </button>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-slate-500"
+                          >sentiment_satisfied</span
+                        >
+                        <span class="text-sm font-medium">Sarcastic</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span
+                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-bold border border-green-200 dark:border-green-800"
+                        >Sarcastic</span
+                      >
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium">89.0%</td>
+                    <td class="px-6 py-4 text-center">
+                      <span class="material-symbols-outlined text-green-500"
+                        >check_circle</span
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Accuracy breakdown chart area -->
+          <div class="space-y-4">
+            <h3 class="text-xl font-bold">Emotion Analysis</h3>
+            <div
+              class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm"
+            >
+              <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                Accuracy Breakdown by Category
+              </p>
+              <div class="space-y-6">
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="font-semibold">Happiness</span>
+                    <span class="text-primary font-bold">100%</span>
+                  </div>
+                  <div
+                    class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                  >
+                    <div class="h-full bg-primary" style="width: 100%"></div>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="font-semibold">Anger / Frustration</span>
+                    <span class="text-primary font-bold">92%</span>
+                  </div>
+                  <div
+                    class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                  >
+                    <div class="h-full bg-primary" style="width: 92%"></div>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="font-semibold">Sadness</span>
+                    <span class="text-primary font-bold">85%</span>
+                  </div>
+                  <div
+                    class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                  >
+                    <div class="h-full bg-primary" style="width: 85%"></div>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="font-semibold">Neutral / Calm</span>
+                    <span class="text-primary font-bold">60%</span>
+                  </div>
+                  <div
+                    class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"
+                  >
+                    <div class="h-full bg-primary" style="width: 60%"></div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/10"
+              >
+                <div class="flex items-start gap-3">
+                  <span class="material-symbols-outlined text-primary mt-0.5"
+                    >lightbulb</span
+                  >
+                  <div>
+                    <p class="text-xs font-bold text-primary uppercase">
+                      Study Tip
+                    </p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300">
+                      You struggle most with distinguishing 'Neutral' from
+                      'Sadness'. Pay more attention to the pitch variance in the
+                      next session.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Recommendation Card -->
+            <div
+              class="bg-gradient-to-r from-secondary/20 to-primary/20 p-6 rounded-xl border border-secondary/20 flex flex-col items-center text-center gap-4"
+            >
+              <div
+                class="size-16 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center shadow-md"
+              >
+                <span class="material-symbols-outlined text-3xl text-secondary"
+                  >workspace_premium</span
+                >
+              </div>
+              <div>
+                <h4 class="font-bold text-lg">Next Goal</h4>
+                <p class="text-sm text-slate-500">
+                  Reach 95% overall accuracy to unlock "Complex Social Tones"
+                  module.
+                </p>
+              </div>
+              <div class="w-full bg-white dark:bg-slate-800 h-1.5 rounded-full">
+                <div
+                  class="bg-secondary h-full rounded-full"
+                  style="width: 75%"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <!-- Footer Stats / CTA Bar -->
+      <div
+        class="mt-auto bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-6"
+      >
+        <div
+          class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4"
+        >
+          <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+              <img
+                class="w-8 h-8 rounded-full border-2 border-primary"
+                data-alt="User profile picture"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdB4W4yhDeGBuk8YxiE_m4aAzf4LX42EG-R9kb4hndqLoHap5brYCcy_CaHUnjifWvmeQ6CBXgpodQ2-beRU9pFUowYPuH6J4n2xuWv9oFjSfCzCddRt9ZY2kBssL8CWLSu4pLNNmfPvixJYNmWxaFQXMBLWoFHk-m_zT7YDkXrCBJrd1FDEL-Olr-qrQcUlnwix1DZK0szA9m31indfjJ0FUh7dG5Csyao-qiSvlmVjnj5B8-skbx63tWiJe7CYr64o4cU-svUTm4"
+              />
+              <span class="text-sm font-bold">Alex Johnson</span>
+            </div>
+            <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+            <div class="flex flex-col">
+              <span
+                class="text-[10px] font-bold uppercase tracking-wider text-slate-400"
+                >Total Lesson XP</span
+              >
+              <span class="text-sm font-bold">12,450 XP</span>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <button
+              class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              <span class="material-symbols-outlined">history</span> View
+              History
+            </button>
+            <button
+              class="flex items-center gap-2 bg-primary px-8 py-3 rounded-lg text-white font-bold hover:shadow-lg transition-all"
+            >
+              Continue Journey
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

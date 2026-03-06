@@ -1,0 +1,447 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>User Profile - Emotion Training &amp; Evaluation System</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2b6cee",
+              secondary: "#7c3aed",
+              "background-light": "#f6f6f8",
+              "background-dark": "#101622",
+            },
+            fontFamily: {
+              display: ["Inter"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100"
+  >
+    <div class="flex min-h-screen">
+      <!-- Sidebar Navigation -->
+      <aside
+        class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark flex flex-col h-screen sticky top-0"
+      >
+        <div class="p-6 flex items-center gap-3">
+          <div class="bg-primary/10 p-2 rounded-lg">
+            <span class="material-symbols-outlined text-primary"
+              >psychology</span
+            >
+          </div>
+          <div>
+            <h1 class="text-sm font-bold leading-tight">Emotion Training</h1>
+            <p class="text-xs text-slate-500">Evaluation System</p>
+          </div>
+        </div>
+        <nav class="flex-1 px-4 space-y-1">
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            href="#"
+          >
+            <span class="material-symbols-outlined">home</span>
+            <span class="text-sm font-medium">Home</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            href="#"
+          >
+            <span class="material-symbols-outlined">book_5</span>
+            <span class="text-sm font-medium">My Courses</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            href="#"
+          >
+            <span class="material-symbols-outlined">model_training</span>
+            <span class="text-sm font-medium">Practice</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            href="#"
+          >
+            <span class="material-symbols-outlined">bar_chart_4_bars</span>
+            <span class="text-sm font-medium">Analytics</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            href="#"
+          >
+            <span class="material-symbols-outlined">emoji_events</span>
+            <span class="text-sm font-medium">Achievements</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg transition-colors"
+            href="#"
+          >
+            <span
+              class="material-symbols-outlined"
+              style="font-variation-settings: &quot;FILL&quot; 1"
+              >person</span
+            >
+            <span class="text-sm font-medium">Profile</span>
+          </a>
+        </nav>
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+          <div class="flex items-center gap-3 px-2">
+            <div
+              class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"
+            >
+              <span class="text-xs font-bold text-primary">AJ</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold truncate">Alex Johnson</p>
+              <p class="text-[10px] text-slate-500">Pro Member</p>
+            </div>
+            <span class="material-symbols-outlined text-slate-400 text-sm"
+              >logout</span
+            >
+          </div>
+        </div>
+      </aside>
+      <!-- Main Content -->
+      <main class="flex-1 max-w-5xl mx-auto p-8">
+        <!-- Header Section -->
+        <header
+          class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10"
+        >
+          <div class="flex items-center gap-6">
+            <div class="relative">
+              <div
+                class="w-24 h-24 rounded-full border-4 border-white dark:border-slate-800 shadow-lg overflow-hidden bg-slate-200"
+              >
+                <img
+                  alt="Alex Johnson Profile"
+                  class="w-full h-full object-cover"
+                  data-alt="Portrait photo of a young professional man smiling"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwzynq91QDFMdy9L8KWmYqfOZKNNZ-xGEFyXbngHia1WEAyGixShil6rO-M1zR1AMYm6-fLJRR9taxWWox_vWZWCwTjm4TVJ4Vpipkk-rfA0lVBqmSa3LgCJ-Dsd6Vu9aFDf04m3luLRAOyGufZM14dhrqfTeqYLr_3efVbBporYJeVZC6BZMMh_FsFIDd8pqwy5agbQhg8NdqFZUTLq4565If6P7w4aoExkZOSoNSoQvui_DGpsSI3irjl9ILviu8ppWgpf5YtV6Y"
+                />
+              </div>
+              <button
+                class="absolute bottom-0 right-0 p-1.5 bg-primary text-white rounded-full shadow-md hover:bg-primary/90 transition-colors"
+              >
+                <span class="material-symbols-outlined text-sm"
+                  >photo_camera</span
+                >
+              </button>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold tracking-tight">Alex Johnson</h2>
+              <div class="flex items-center gap-3 mt-1">
+                <span
+                  class="px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider"
+                  >Level 14</span
+                >
+                <div
+                  class="w-32 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden"
+                >
+                  <div class="bg-secondary w-3/4 h-full"></div>
+                </div>
+                <span class="text-xs text-slate-500">75% to Level 15</span>
+              </div>
+            </div>
+          </div>
+          <button
+            class="flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-shadow shadow-md"
+          >
+            <span class="material-symbols-outlined text-lg">edit</span>
+            Edit Profile
+          </button>
+        </header>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Personal Information -->
+          <section
+            class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            <div class="flex items-center gap-2 mb-6 text-primary">
+              <span class="material-symbols-outlined">badge</span>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">
+                Personal Information
+              </h3>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <label
+                  class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1"
+                  >Full Name</label
+                >
+                <p class="text-sm font-medium">Alex Johnson</p>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1"
+                  >Email Address</label
+                >
+                <p class="text-sm font-medium">alex.johnson@example.com</p>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1"
+                  >Location</label
+                >
+                <p class="text-sm font-medium flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs"
+                    >location_on</span
+                  >
+                  San Francisco, CA
+                </p>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1"
+                  >Bio</label
+                >
+                <p
+                  class="text-sm leading-relaxed text-slate-600 dark:text-slate-400"
+                >
+                  Passionate about emotional intelligence and behavioral
+                  science. Currently focusing on developing resilience through
+                  daily practice.
+                </p>
+              </div>
+            </div>
+          </section>
+          <!-- Account Security -->
+          <section
+            class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            <div class="flex items-center gap-2 mb-6 text-primary">
+              <span class="material-symbols-outlined">security</span>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">
+                Account Security
+              </h3>
+            </div>
+            <div class="space-y-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-semibold">Change Password</p>
+                  <p class="text-xs text-slate-500">
+                    Update your security credentials
+                  </p>
+                </div>
+                <button
+                  class="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 transition-colors"
+                >
+                  UPDATE
+                </button>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-semibold">Two-Factor Authentication</p>
+                  <p class="text-xs text-slate-500">
+                    Add an extra layer of security
+                  </p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input
+                    checked=""
+                    class="sr-only peer"
+                    type="checkbox"
+                    value=""
+                  />
+                  <div
+                    class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"
+                  ></div>
+                </label>
+              </div>
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                <p class="text-xs text-slate-500 italic">
+                  Last login: 2 hours ago from San Francisco, CA
+                </p>
+              </div>
+            </div>
+          </section>
+          <!-- Notification Settings -->
+          <section
+            class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            <div class="flex items-center gap-2 mb-6 text-secondary">
+              <span class="material-symbols-outlined"
+                >notifications_active</span
+              >
+              <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">
+                Notification Settings
+              </h3>
+            </div>
+            <div class="space-y-5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-slate-400"
+                    >trending_up</span
+                  >
+                  <p class="text-sm font-medium">Email alerts for progress</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input
+                    checked=""
+                    class="sr-only peer"
+                    type="checkbox"
+                    value=""
+                  />
+                  <div
+                    class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-secondary"
+                  ></div>
+                </label>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-slate-400"
+                    >calendar_month</span
+                  >
+                  <p class="text-sm font-medium">Weekly reports</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input
+                    checked=""
+                    class="sr-only peer"
+                    type="checkbox"
+                    value=""
+                  />
+                  <div
+                    class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-secondary"
+                  ></div>
+                </label>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-slate-400"
+                    >volume_up</span
+                  >
+                  <p class="text-sm font-medium">Achievement sounds</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input class="sr-only peer" type="checkbox" value="" />
+                  <div
+                    class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-secondary"
+                  ></div>
+                </label>
+              </div>
+            </div>
+          </section>
+          <!-- Privacy & Profile Appearance -->
+          <section
+            class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            <div class="flex items-center gap-2 mb-6 text-secondary">
+              <span class="material-symbols-outlined">visibility</span>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">
+                Privacy &amp; Profile
+              </h3>
+            </div>
+            <div class="space-y-6">
+              <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="bg-white dark:bg-slate-900 p-2 rounded-lg shadow-sm"
+                    >
+                      <span class="material-symbols-outlined text-slate-600"
+                        >public</span
+                      >
+                    </div>
+                    <div>
+                      <p class="text-sm font-bold">Public Profile</p>
+                      <p class="text-xs text-slate-500">
+                        Allow others to see your achievements
+                      </p>
+                    </div>
+                  </div>
+                  <label
+                    class="relative inline-flex items-center cursor-pointer"
+                  >
+                    <input
+                      checked=""
+                      class="sr-only peer"
+                      type="checkbox"
+                      value=""
+                    />
+                    <div
+                      class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-secondary"
+                    ></div>
+                  </label>
+                </div>
+              </div>
+              <div class="space-y-3 px-1">
+                <p class="text-sm font-semibold">Profile Visibility Settings</p>
+                <div class="flex items-center gap-2">
+                  <input
+                    checked=""
+                    class="rounded border-slate-300 text-primary focus:ring-primary"
+                    type="checkbox"
+                  />
+                  <label class="text-xs text-slate-600 dark:text-slate-400"
+                    >Show current level on leaderboard</label
+                  >
+                </div>
+                <div class="flex items-center gap-2">
+                  <input
+                    class="rounded border-slate-300 text-primary focus:ring-primary"
+                    type="checkbox"
+                  />
+                  <label class="text-xs text-slate-600 dark:text-slate-400"
+                    >Share course progress with mentors</label
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <!-- Footer Action Bar -->
+        <footer
+          class="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4"
+        >
+          <button
+            class="px-6 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            Discard Changes
+          </button>
+          <button
+            class="px-8 py-2 text-sm font-semibold bg-primary text-white rounded-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            Save Changes
+          </button>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
