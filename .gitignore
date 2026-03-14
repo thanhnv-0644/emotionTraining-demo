@@ -5,3 +5,13 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Prisma (unused - using raw SQL)
+prisma/
+prisma.config.ts
+
+# Claude AI memory
+.claude/
+
+# Python AI service venv
+GR/web/ai-service/venv/

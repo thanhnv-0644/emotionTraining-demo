@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface Lesson {
   id: string;
   filename: string;
-  emotion: 'Happy' | 'Sad' | 'Angry' | 'Neutral' | 'Surprised' | 'Disgusted';
+  emotion: "Happy" | "Sad" | "Angry" | "Neutral" | "Surprised" | "Disgusted";
   difficulty: number;
   uploadDate: string;
   duration: string;
@@ -14,60 +14,80 @@ interface Lesson {
 
 const LESSONS: Lesson[] = [
   {
-    id: 'AUD-001',
-    filename: 'Joyful_Greeting.wav',
-    emotion: 'Happy',
+    id: "AUD-001",
+    filename: "Joyful_Greeting.wav",
+    emotion: "Happy",
     difficulty: 85,
-    uploadDate: 'Oct 01, 2023',
-    duration: '00:45',
-    size: '2.4 MB',
+    uploadDate: "Oct 01, 2023",
+    duration: "00:45",
+    size: "2.4 MB",
   },
   {
-    id: 'AUD-002',
-    filename: 'Sad_Monologue.mp3',
-    emotion: 'Sad',
+    id: "AUD-002",
+    filename: "Sad_Monologue.mp3",
+    emotion: "Sad",
     difficulty: 40,
-    uploadDate: 'Oct 02, 2023',
-    duration: '01:12',
-    size: '4.1 MB',
+    uploadDate: "Oct 02, 2023",
+    duration: "01:12",
+    size: "4.1 MB",
   },
   {
-    id: 'AUD-003',
-    filename: 'Angry_Command.wav',
-    emotion: 'Angry',
+    id: "AUD-003",
+    filename: "Angry_Command.wav",
+    emotion: "Angry",
     difficulty: 92,
-    uploadDate: 'Oct 05, 2023',
-    duration: '00:15',
-    size: '1.1 MB',
+    uploadDate: "Oct 05, 2023",
+    duration: "00:15",
+    size: "1.1 MB",
   },
   {
-    id: 'AUD-004',
-    filename: 'Neutral_Dialogue.mp3',
-    emotion: 'Neutral',
+    id: "AUD-004",
+    filename: "Neutral_Dialogue.mp3",
+    emotion: "Neutral",
     difficulty: 10,
-    uploadDate: 'Oct 07, 2023',
-    duration: '02:30',
-    size: '6.8 MB',
+    uploadDate: "Oct 07, 2023",
+    duration: "02:30",
+    size: "6.8 MB",
   },
 ];
 
 const EMOTION_COLORS: Record<string, { bg: string; text: string }> = {
-  Happy: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400' },
-  Sad: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400' },
-  Angry: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400' },
-  Neutral: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300' },
-  Surprised: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400' },
-  Disgusted: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400' },
+  Happy: {
+    bg: "bg-green-100 dark:bg-green-900/30",
+    text: "text-green-700 dark:text-green-400",
+  },
+  Sad: {
+    bg: "bg-blue-100 dark:bg-blue-900/30",
+    text: "text-blue-700 dark:text-blue-400",
+  },
+  Angry: {
+    bg: "bg-red-100 dark:bg-red-900/30",
+    text: "text-red-700 dark:text-red-400",
+  },
+  Neutral: {
+    bg: "bg-slate-100 dark:bg-slate-800",
+    text: "text-slate-700 dark:text-slate-300",
+  },
+  Surprised: {
+    bg: "bg-yellow-100 dark:bg-yellow-900/30",
+    text: "text-yellow-700 dark:text-yellow-400",
+  },
+  Disgusted: {
+    bg: "bg-purple-100 dark:bg-purple-900/30",
+    text: "text-purple-700 dark:text-purple-400",
+  },
 };
 
 export default function LessonManagement({ courseId }: { courseId?: string }) {
   const [lessons, setLessons] = useState<Lesson[]>(LESSONS);
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredLessons = lessons.filter((lesson) => {
-    const matchesSearch = lesson.filename.toLowerCase().includes(searchTerm.toLowerCase());
-    if (selectedFilter === 'all') return matchesSearch;
+    const matchesSearch = lesson.filename
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    if (selectedFilter === "all") return matchesSearch;
     return matchesSearch && lesson.emotion === selectedFilter;
   });
 
@@ -80,7 +100,9 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
           <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
           <div className="flex items-center gap-1 text-slate-500 text-sm font-medium">
             <span>Courses</span>
-            <span className="material-symbols-outlined text-sm">chevron_right</span>
+            <span className="material-symbols-outlined text-sm">
+              chevron_right
+            </span>
             <span className="text-primary">Advanced Emotion Analysis</span>
           </div>
         </div>
@@ -98,7 +120,9 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
             />
           </div>
           <button className="size-9 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">
-            <span className="material-symbols-outlined text-[20px]">notifications</span>
+            <span className="material-symbols-outlined text-[20px]">
+              notifications
+            </span>
           </button>
         </div>
       </header>
@@ -113,28 +137,31 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                 Audio Lessons
               </h3>
               <p className="text-slate-500 dark:text-slate-400 mt-1">
-                Manage and evaluate curated audio files for emotional intelligence training.
+                Manage and evaluate curated audio files for emotional
+                intelligence training.
               </p>
             </div>
             <button className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm font-bold shadow-lg shadow-primary/25 transition-all">
-              <span className="material-symbols-outlined text-[20px]">upload</span>
+              <span className="material-symbols-outlined text-[20px]">
+                upload
+              </span>
               Upload New Audio
             </button>
           </div>
 
           {/* Filters */}
           <div className="flex flex-wrap gap-2">
-            {['all', 'Happy', 'Sad', 'Angry', 'Neutral'].map((filter) => (
+            {["all", "Happy", "Sad", "Angry", "Neutral"].map((filter) => (
               <button
                 key={filter}
                 onClick={() => setSelectedFilter(filter)}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                   selectedFilter === filter
-                    ? 'bg-primary text-white flex items-center gap-2'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    ? "bg-primary text-white flex items-center gap-2"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
                 }`}
               >
-                {filter === 'all' ? 'All Lessons' : `Emotion: ${filter}`}
+                {filter === "all" ? "All Lessons" : `Emotion: ${filter}`}
                 {selectedFilter === filter && (
                   <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">
                     {filteredLessons.length}
@@ -210,11 +237,15 @@ function LessonRow({ lesson }: { lesson: Lesson }) {
 
   return (
     <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
-      <td className="px-6 py-4 text-sm font-mono text-slate-500">{lesson.id}</td>
+      <td className="px-6 py-4 text-sm font-mono text-slate-500">
+        {lesson.id}
+      </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
           <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-            <span className="material-symbols-outlined text-[18px]">graphic_eq</span>
+            <span className="material-symbols-outlined text-[18px]">
+              graphic_eq
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold text-slate-900 dark:text-white">
@@ -227,7 +258,9 @@ function LessonRow({ lesson }: { lesson: Lesson }) {
         </div>
       </td>
       <td className="px-6 py-4">
-        <span className={`px-2.5 py-1 rounded-full ${colors.bg} ${colors.text} text-xs font-bold`}>
+        <span
+          className={`px-2.5 py-1 rounded-full ${colors.bg} ${colors.text} text-xs font-bold`}
+        >
           {lesson.emotion}
         </span>
       </td>
@@ -249,7 +282,9 @@ function LessonRow({ lesson }: { lesson: Lesson }) {
             className="size-8 rounded hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400"
             title="Preview"
           >
-            <span className="material-symbols-outlined text-[18px]">play_circle</span>
+            <span className="material-symbols-outlined text-[18px]">
+              play_circle
+            </span>
           </button>
           <button
             className="size-8 rounded hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400"
@@ -261,7 +296,9 @@ function LessonRow({ lesson }: { lesson: Lesson }) {
             className="size-8 rounded hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center text-slate-400 hover:text-red-600"
             title="Delete"
           >
-            <span className="material-symbols-outlined text-[18px]">delete</span>
+            <span className="material-symbols-outlined text-[18px]">
+              delete
+            </span>
           </button>
         </div>
       </td>
