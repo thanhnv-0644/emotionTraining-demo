@@ -8,7 +8,6 @@ export default function AdminSidebar() {
   const navItems = [
     { name: 'Dashboard', icon: 'dashboard', href: '/admin' },
     { name: 'Manage Courses', icon: 'school', href: '/admin/courses' },
-    { name: 'Manage Lessons', icon: 'audio_file', href: '/admin/lessons' },
     { name: 'User Management', icon: 'group', href: '/admin/users' },
     { name: 'Analytics', icon: 'analytics', href: '/admin/analytics' },
   ];
@@ -45,8 +44,12 @@ export default function AdminSidebar() {
           );
         })}
         <div className="my-4 border-t border-slate-100 dark:border-slate-800"></div>
-        <Link href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-          <span className="material-symbols-outlined text-[22px] group-hover:text-primary transition-colors">settings</span>
+        <Link href="/admin/settings" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${
+          pathname === '/admin/settings'
+            ? 'bg-primary/10 text-primary font-bold'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+        }`}>
+          <span className={`material-symbols-outlined text-[22px] ${pathname === '/admin/settings' ? 'fill-current' : 'group-hover:text-primary transition-colors'}`}>settings</span>
           <span className="text-sm font-medium">System Settings</span>
         </Link>
       </nav>

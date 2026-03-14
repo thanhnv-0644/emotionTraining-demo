@@ -21,10 +21,16 @@ export default function Login() {
               "Emotional intelligence is the ability to sense, understand, and effectively apply the power and acumen of emotions as a source of human energy, information, connection, and influence."
             </p>
             <div className="flex items-center gap-4 pt-6">
-              <div className="flex -space-x-2">
-                <img alt="User" className="h-10 w-10 rounded-full border-2 border-primary object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-0TEJ-hmIA8Dgtn0Wxvav-KNn9dAwEtVsZ_0qSyZp88u0Mg4hDaVHHPUx7eogFHC6xy6T7yVviUtMdlfzfWDoUY7HCXTq6ehU9jjDXHY2OB1Mp0d4FhAhCxxqM2S30XM1_c16Idkmh9zk1vBQWuOsqOLHOUotVxIO3EpUuXQCZIIaMRwKLKj1eyoCZx-rY_37LQyp_dWNL_hZUTMmpgNDk9_mIQzQcElJ7HdkhDSk6x9QiCYQgrlZMNVdgfsr1JBvtUzypH8-YWuQ" />
-                <img alt="User" className="h-10 w-10 rounded-full border-2 border-primary object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWZwiftgu4AMhbzaLfq4zDAip5gXzPW3qNmE8lWEZBNFHeHJhf5eJdHmOsjI8fwVquHEZxhvGcChIKIetJDH6r3_k1r0ulDfMvglis8QVkCpB_lhPxI2JqSSczOh4QEoPb6puB6f26-TS7aiVkoXWVV5ejvWJSRUc9yePGjKZfAj9cH8qiTu0D41JZefEr20nyCHPTg8w4afgS57EhFq1Xa0mAzpEU2-At_8f1x9C0E090pTq1QEBIz8fPOH1NOt5_NBScrdI66iit" />
-                <img alt="User" className="h-10 w-10 rounded-full border-2 border-primary object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWdblADvkaffefr_QT-n86mCM8htbLs9w9ujQ1TnBUmsOEj_Jk4kIH-4yqDVST6t6kq-x46uIe3rmlh_tueJkDhWdh48ud5zVdlDibRySMKp-HO0qu41Fsyy_Fa48Ng1qNedSP0U9YrE1dmfuaEqrIzt4LCTtTZElGJZwKkSqn8dRcfmkYjla7dVpKxJiBpamDh_5f3P5d0pg9u_nMSBLV5fHCR0jjYDTFHWOos9Z_JVQIYBt0MIk7kkHzsCOszP1dtIwX5oOwlF8J" />
+              <div className="flex gap-3">
+                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-md" title="Google">
+                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                </div>
+                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-md" title="Facebook">
+                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="#1877F2" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </div>
+                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-md" title="Apple">
+                  <svg className="h-6 w-6 fill-slate-900" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style={{transform: 'scale(1.2) translateY(0.5px)'}}><path d="M349.13,136.86c-40.32,0-57.36,19.24-85.44,19.24C234.9,156.1,212.94,137,178,137c-34.2,0-70.67,20.88-93.83,56.45-32.52,50.16-27,144.63,25.67,225.11,18.84,28.81,44,61.12,77,61.47h.6c28.68,0,37.2-18.78,76.67-19h.6c38.88,0,46.68,18.89,75.24,18.89h.6c33-.35,59.51-36.15,78.35-64.85,13.56-20.64,18.6-31,29-54.35-76.19-28.92-88.43-136.93-13.08-178.34-23-28.8-55.32-45.48-85.79-45.48Z"/><path d="M340.25,32c-24,1.63-52,16.91-68.4,36.86-14.88,18.08-27.12,44.9-22.32,70.91h1.92c25.56,0,51.72-15.39,67-35.11C333.17,85.89,344.33,59.29,340.25,32Z"/></svg>
+                </div>
               </div>
               <span className="text-indigo-100 text-sm font-medium">Joined by 10,000+ professionals</span>
             </div>
@@ -38,14 +44,14 @@ export default function Login() {
             <p className="mt-2 text-slate-600 dark:text-slate-400">Please enter your details to sign in.</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <button className="flex items-center justify-center py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-              <img alt="Google" className="h-5 w-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7eVYtO9txidGD6JOptJ2uX2YXky0xhppKIHIgzwPTC-0GYDrt5M4JxIJx00ZfhuXvIGE6ydWvaWPwmV2M-uXAQ0KvQz_RTPwtBKlhQdzao4vN58S7lmse9c9OW8REuxztPssWoKmGvHICxOdszmms9ivZyxpVdraqn1NIJepEwchfNqGcWmy2pfc6M0zf7POHZKKGw0MXZecfOIcNU2fXHXEWKcxFJCkLA1vVScwFWNPRIOw7G4FuPZmc1JR1YPj4mjMBZbwXLsij" />
+            <button className="flex items-center justify-center py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" title="Sign in with Google">
+              <svg className="h-5 w-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
             </button>
-            <button className="flex items-center justify-center py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-              <img alt="Microsoft" className="h-5 w-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeP0SAAI6sM4vtIhvBuC77NjCdxa473pWwpuCkm5YKeqtfVAsEcS7enGyE8glqcxypYUJ131jVn--IBsh4kGyDzUODb3e51_iYNfzfLQMUZYsvXLJ0mbNgeWjwGyj1CFerV0xc-a7iURRTCvM80rZJvJ1jvJkzvPeJ_-1L8O50cIVzGkPHDQsfJ2Tvef4H3LApaL5hxbWBKg2y2iOIDEyiijsI1_pWXh6Mg3Hx7sJVcx3Z0i6YQn3IW6UKX2MPEiNdYwwyz_TuVn44" />
+            <button className="flex items-center justify-center py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" title="Sign in with Facebook">
+              <svg className="h-5 w-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="#1877F2" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
             </button>
-            <button className="flex items-center justify-center py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-              <img alt="Apple" className="h-5 w-5 dark:invert" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCii6_ByqejvmrSNrayA74Y2nkYI72Ddrnuqza8PPagSNxaN0nRgDufxkOXbofkv73opFHE2nS9YsTCWcGTrYoE0tSTfGeJ98r2wKbcLfVPf8Z4Rg29L-6lPHbNLb_DRLyHwvWpvR6N-puvZGTi_BRud9DOgedNm2WNwfBaKUzynkc-jMRESZUmsd5SynTMxMO2ZXk4iFPbwl36rZyiIrcv4PXPXO-5PHBQf5DsKTXfR2VYfdH3Ep_5vb5qyA31alQLf8mQRpxMwmhj" />
+            <button className="flex items-center justify-center py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" title="Sign in with Apple ID">
+              <svg className="h-5 w-5 group-hover:scale-110 transition-transform fill-slate-900 dark:fill-slate-100" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style={{transform: 'scale(1.2) translateY(0.5px)'}}><path d="M349.13,136.86c-40.32,0-57.36,19.24-85.44,19.24C234.9,156.1,212.94,137,178,137c-34.2,0-70.67,20.88-93.83,56.45-32.52,50.16-27,144.63,25.67,225.11,18.84,28.81,44,61.12,77,61.47h.6c28.68,0,37.2-18.78,76.67-19h.6c38.88,0,46.68,18.89,75.24,18.89h.6c33-.35,59.51-36.15,78.35-64.85,13.56-20.64,18.6-31,29-54.35-76.19-28.92-88.43-136.93-13.08-178.34-23-28.8-55.32-45.48-85.79-45.48Z"/><path d="M340.25,32c-24,1.63-52,16.91-68.4,36.86-14.88,18.08-27.12,44.9-22.32,70.91h1.92c25.56,0,51.72-15.39,67-35.11C333.17,85.89,344.33,59.29,340.25,32Z"/></svg>
             </button>
           </div>
           <div className="relative">
@@ -79,25 +85,13 @@ export default function Login() {
                 <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-primary focus:ring-primary border-slate-300 dark:border-slate-700 rounded transition-all" />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700 dark:text-slate-300">Remember me</label>
               </div>
-              <div className="text-sm">
-                <Link href="#" className="font-semibold text-primary hover:text-primary/80 transition-colors">Forgot your password?</Link>
-              </div>
+              <a href="#" className="text-sm text-primary hover:text-primary/80 font-medium">Forgot password?</a>
             </div>
-            <div>
-              <Link href="/dashboard" className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
-                Sign in to Dashboard
-              </Link>
-            </div>
+            <button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg text-sm font-bold shadow-lg shadow-primary/20 transition-all">Sign In</button>
           </form>
           <p className="text-center text-sm text-slate-600 dark:text-slate-400">
-            Don't have an account?{' '}
-            <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">Start your 14-day free trial</Link>
+            Don't have an account? <Link href="/register" className="text-primary hover:text-primary/80 font-bold">Create one</Link>
           </p>
-          <div className="pt-8 flex justify-center space-x-6 text-xs text-slate-400">
-            <Link href="#" className="hover:text-slate-600 dark:hover:text-slate-300">Privacy Policy</Link>
-            <Link href="#" className="hover:text-slate-600 dark:hover:text-slate-300">Terms of Service</Link>
-            <Link href="#" className="hover:text-slate-600 dark:hover:text-slate-300">Help Center</Link>
-          </div>
         </div>
       </div>
     </div>

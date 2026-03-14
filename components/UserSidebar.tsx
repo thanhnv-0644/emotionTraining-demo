@@ -8,10 +8,9 @@ export default function UserSidebar() {
   const navItems = [
     { name: 'Home', icon: 'home', href: '/dashboard' },
     { name: 'My Courses', icon: 'book_5', href: '/courses' },
-    { name: 'Practice', icon: 'target', href: '/practice' },
     { name: 'Analytics', icon: 'monitoring', href: '/analytics' },
     { name: 'Achievements', icon: 'emoji_events', href: '/achievements' },
-    { name: 'Profile', icon: 'person', href: '#' },
+    { name: 'Profile', icon: 'person', href: '/profile' },
   ];
 
   return (
