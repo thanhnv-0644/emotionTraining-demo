@@ -8,5 +8,8 @@ import java.util.List;
 
 @Repository
 public interface LessonRepository extends JpaRepository<Lesson, String> {
+    List<Lesson> findByCourseIdAndDeletedAtIsNullOrderByOrder(String courseId);
     List<Lesson> findByCourseIdOrderByOrder(String courseId);
+    List<Lesson> findByCourseId(String courseId);
+    int countByCourseIdAndDeletedAtIsNull(String courseId);
 }

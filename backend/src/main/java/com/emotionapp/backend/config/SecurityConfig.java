@@ -40,8 +40,10 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/api/payments/callback/vnpay").permitAll()
+                .requestMatchers("/api/payments/return/vnpay").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

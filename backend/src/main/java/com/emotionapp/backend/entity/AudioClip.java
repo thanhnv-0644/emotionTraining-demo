@@ -3,6 +3,8 @@ package com.emotionapp.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "audio_clips")
 @Data
@@ -34,6 +36,15 @@ public class AudioClip {
 
     @Column(name = "`order`")
     private Integer order;
+
+    @Column(name = "createdAt")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updatedAt")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deletedAt")
+    private LocalDateTime deletedAt;
 
     public enum Emotion {
         happiness, sadness, anger, fear, surprise, disgust, neutral

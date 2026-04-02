@@ -27,4 +27,7 @@ public class Wishlist {
 
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
+
+    @Column(name = "deletedAt")
+    private LocalDateTime deletedAt;
 }

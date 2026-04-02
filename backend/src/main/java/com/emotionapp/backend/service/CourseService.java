@@ -5,6 +5,7 @@ import com.emotionapp.backend.dto.request.UpdateCourseRequest;
 import com.emotionapp.backend.dto.response.CourseDetailResponse;
 import com.emotionapp.backend.dto.response.CourseResponse;
 import com.emotionapp.backend.dto.response.LessonResponse;
+import com.emotionapp.backend.entity.AudioClip;
 import com.emotionapp.backend.entity.Course;
 import com.emotionapp.backend.entity.Lesson;
 import com.emotionapp.backend.exception.AppException;
@@ -31,7 +32,7 @@ public class CourseService {
     private final EnrollmentRepository enrollmentRepository;
 
     public List<CourseResponse> getAllPublished() {
-        return courseRepository.findByStatus(Course.Status.published)
+        return courseRepository.findByStatusAndDeletedAtIsNull(Course.Status.published)
                 .stream()
                 .map(c -> toCourseResponse(c, null))
                 .collect(Collectors.toList());
@@ -79,7 +80,7 @@ public class CourseService {
                 .description(request.getDescription())
                 .image(request.getImage())
                 .price(request.getPrice())
-                .isFree(request.isFree())
+                .isFree(request.getPrice() == 0)
                 .status(Course.Status.draft)
                 .category(category)
                 .createdAt(LocalDateTime.now())
@@ -99,7 +100,7 @@ public class CourseService {
         if (request.getDescription() != null) course.setDescription(request.getDescription());
         if (request.getImage() != null) course.setImage(request.getImage());
         course.setPrice(request.getPrice());
-        course.setFree(request.isFree());
+        course.setFree(request.getPrice() == 0);
 
         if (request.getStatus() != null) {
             try {
@@ -125,13 +126,32 @@ public class CourseService {
     public void deleteCourse(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Course not found"));
-        course.setStatus(Course.Status.archived);
-        course.setUpdatedAt(LocalDateTime.now());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // Delete all audio clips of all lessons in this course
+        List<Lesson> lessons = lessonRepository.findByCourseId(id);
+        for (Lesson lesson : lessons) {
+            List<AudioClip> audioClips = audioClipRepository.findByLessonId(lesson.getId());
+            for (AudioClip clip : audioClips) {
+                clip.setDeletedAt(now);
+                clip.setUpdatedAt(now);
+                audioClipRepository.save(clip);
+            }
+            // Delete lesson
+            lesson.setDeletedAt(now);
+            lesson.setUpdatedAt(now);
+            lessonRepository.save(lesson);
+        }
+
+        // Delete course
+        course.setDeletedAt(now);
+        course.setUpdatedAt(now);
         courseRepository.save(course);
     }
 
     public List<CourseResponse> getAllForAdmin() {
-        return courseRepository.findAll()
+        return courseRepository.findByDeletedAtIsNull()
                 .stream()
                 .map(c -> toCourseResponse(c, null))
                 .collect(Collectors.toList());

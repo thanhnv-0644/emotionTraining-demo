@@ -32,7 +32,7 @@ public class LessonService {
     private final EnrollmentRepository enrollmentRepository;
 
     public List<LessonResponse> getLessonsByCourse(String courseId) {
-        return lessonRepository.findByCourseIdOrderByOrder(courseId)
+        return lessonRepository.findByCourseIdAndDeletedAtIsNullOrderByOrder(courseId)
                 .stream()
                 .map(this::toLessonResponse)
                 .collect(Collectors.toList());
@@ -80,11 +80,13 @@ public class LessonService {
             }
         }
 
+        int nextOrder = lessonRepository.countByCourseIdAndDeletedAtIsNull(courseId) + 1;
+
         Lesson lesson = Lesson.builder()
                 .id(IdGenerator.generateId())
                 .course(course)
                 .title(request.getTitle())
-                .order(request.getOrder())
+                .order(nextOrder)
                 .level(level)
                 .duration(request.getDuration())
                 .status(Lesson.Status.draft)
@@ -129,7 +131,17 @@ public class LessonService {
     public void deleteLesson(String lessonId) {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Lesson not found"));
-        lessonRepository.delete(lesson);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // Soft delete tất cả audio clips của lesson này
+        List<AudioClip> clips = audioClipRepository.findByLessonIdOrderByOrder(lessonId);
+        clips.forEach(clip -> clip.setDeletedAt(now));
+        audioClipRepository.saveAll(clips);
+
+        lesson.setDeletedAt(now);
+        lesson.setUpdatedAt(now);
+        lessonRepository.save(lesson);
     }
 
     private LessonResponse toLessonResponse(Lesson lesson) {
