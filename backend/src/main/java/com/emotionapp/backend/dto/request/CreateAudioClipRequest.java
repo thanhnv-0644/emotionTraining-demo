@@ -8,5 +8,4 @@ public class CreateAudioClipRequest {
     private String audioUrl;
     private Integer duration;
     private String targetEmotion;
-    private int order;
 }

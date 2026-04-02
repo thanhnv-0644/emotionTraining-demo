@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface CourseRepository extends JpaRepository<Course, String> {
-    List<Course> findByStatus(Course.Status status);
-    List<Course> findByStatusAndCategory(Course.Status status, Course.Category category);
+    List<Course> findByStatusAndDeletedAtIsNull(Course.Status status);
+    List<Course> findByStatusAndCategoryAndDeletedAtIsNull(Course.Status status, Course.Category category);
+    List<Course> findByDeletedAtIsNull();
 }

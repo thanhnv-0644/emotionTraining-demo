@@ -1,5 +1,7 @@
 package com.emotionapp.backend.controller;
 
+import com.emotionapp.backend.dto.request.AdminEnrollRequest;
+import com.emotionapp.backend.dto.request.AdminUpdateUserRequest;
 import com.emotionapp.backend.dto.request.CreateAudioClipRequest;
 import com.emotionapp.backend.dto.request.CreateCourseRequest;
 import com.emotionapp.backend.dto.request.CreateLessonRequest;
@@ -9,10 +11,15 @@ import com.emotionapp.backend.dto.request.UpdateLessonRequest;
 import com.emotionapp.backend.dto.response.ApiResponse;
 import com.emotionapp.backend.dto.response.AudioClipResponse;
 import com.emotionapp.backend.dto.response.CourseResponse;
+import com.emotionapp.backend.dto.response.EnrollmentResponse;
 import com.emotionapp.backend.dto.response.LessonResponse;
 import com.emotionapp.backend.dto.response.UserResponse;
+import com.emotionapp.backend.dto.response.AdminAnalyticsResponse;
+import com.emotionapp.backend.service.AnalyticsService;
 import com.emotionapp.backend.service.AudioClipService;
+import com.emotionapp.backend.service.EnrollmentService;
 import com.emotionapp.backend.service.CourseService;
+import com.emotionapp.backend.service.FileStorageService;
 import com.emotionapp.backend.service.LessonService;
 import com.emotionapp.backend.service.UserService;
 import jakarta.validation.Valid;
@@ -25,10 +32,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -39,6 +49,9 @@ public class AdminController {
     private final LessonService lessonService;
     private final AudioClipService audioClipService;
     private final UserService userService;
+    private final EnrollmentService enrollmentService;
+    private final FileStorageService fileStorageService;
+    private final AnalyticsService analyticsService;
 
     // ── Courses ──────────────────────────────────────────────────────────────
 
@@ -102,10 +115,19 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(audioClipService.getClipsByLesson(lessonId)));
     }
 
-    @PostMapping("/lessons/{lessonId}/audio-clips")
+    @PostMapping(value = "/lessons/{lessonId}/audio-clips", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<AudioClipResponse>> createClip(
             @PathVariable String lessonId,
-            @RequestBody CreateAudioClipRequest request) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("subject") String subject,
+            @RequestParam("targetEmotion") String targetEmotion,
+            @RequestParam(value = "duration", required = false) Integer duration) throws IOException {
+        String audioUrl = fileStorageService.saveFile(file);
+        CreateAudioClipRequest request = new CreateAudioClipRequest();
+        request.setSubject(subject);
+        request.setAudioUrl(audioUrl);
+        request.setTargetEmotion(targetEmotion);
+        request.setDuration(duration);
         return ResponseEntity.ok(ApiResponse.success("Audio clip created", audioClipService.createClip(lessonId, request)));
     }
 
@@ -129,11 +151,50 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(userService.getAllUsers()));
     }
 
-    @PutMapping("/users/{id}/status")
-    public ResponseEntity<ApiResponse<UserResponse>> updateUserStatus(
+    @PutMapping("/users/{id}")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
             @PathVariable String id,
-            @RequestBody Map<String, String> body) {
-        String status = body.get("status");
-        return ResponseEntity.ok(ApiResponse.success("User status updated", userService.updateUserStatus(id, status)));
+            @RequestBody AdminUpdateUserRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("User updated", userService.adminUpdateUser(id, request)));
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable String id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok(ApiResponse.success("User deactivated", null));
+    }
+
+    // ── Enrollments ───────────────────────────────────────────────────────────
+
+    @GetMapping("/enrollments")
+    public ResponseEntity<ApiResponse<List<EnrollmentResponse>>> getAllEnrollments(
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String courseId) {
+        return ResponseEntity.ok(ApiResponse.success(
+                enrollmentService.adminGetAllEnrollments(userId, courseId)));
+    }
+
+    @PostMapping("/enrollments")
+    public ResponseEntity<ApiResponse<EnrollmentResponse>> adminEnroll(
+            @RequestBody AdminEnrollRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Enrolled successfully",
+                enrollmentService.adminEnroll(request)));
+    }
+
+    @DeleteMapping("/enrollments/{id}")
+    public ResponseEntity<ApiResponse<Void>> revokeEnrollment(@PathVariable String id) {
+        enrollmentService.adminRevokeEnrollment(id);
+        return ResponseEntity.ok(ApiResponse.success("Enrollment revoked", null));
+    }
+
+    // ── Analytics ─────────────────────────────────────────────────────────────
+
+    @GetMapping("/analytics")
+    public ResponseEntity<ApiResponse<AdminAnalyticsResponse>> getAnalytics(
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to) {
+        LocalDateTime fromDate = from != null ? LocalDateTime.parse(from + "T00:00:00") : null;
+        LocalDateTime toDate   = to   != null ? LocalDateTime.parse(to   + "T23:59:59") : null;
+        return ResponseEntity.ok(ApiResponse.success(analyticsService.getAdminAnalytics(fromDate, toDate)));
     }
 }

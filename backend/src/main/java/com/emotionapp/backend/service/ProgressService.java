@@ -57,6 +57,8 @@ public class ProgressService {
                 score++;
             }
         }
+        int totalClips = clips.size();
+        score = totalClips > 0 ? (int) Math.round(score * 100.0 / totalClips) : 0;
 
         // Determine attempt number
         List<UserProgress> previousAttempts = userProgressRepository.findByUserIdAndLessonId(userId, lessonId);
@@ -83,10 +85,20 @@ public class ProgressService {
 
         userProgressRepository.save(progress);
 
-        // Award XP for completing a lesson (10 XP per completion, bonus for good score)
-        int xpGain = 10 + (score * 2);
-        user.setXp((user.getXp() == null ? 0 : user.getXp()) + xpGain);
-        userRepository.save(user);
+        // Chỉ cộng XP lần đầu hoàn thành
+        if (attemptNumber == 1) {
+            int baseXp = switch (lesson.getLevel()) {
+                case intermediate -> 20;
+                case advanced     -> 30;
+                default           -> 10; // beginner
+            };
+
+            int bonus = score >= 80 ? baseXp / 2 : 0;
+            int xpGain = baseXp + bonus;
+
+            user.setXp((user.getXp() == null ? 0 : user.getXp()) + xpGain);
+            userRepository.save(user);
+        }
 
         return toResponse(progress);
     }

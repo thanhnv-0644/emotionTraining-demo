@@ -23,7 +23,7 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "passwordHash", nullable = false)
+    @Column(name = "passwordHash", nullable = true)
     private String passwordHash;
 
     @Column(name = "avatar")
@@ -45,6 +45,9 @@ public class User {
 
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
+
+    @Column(name = "updatedAt")
+    private LocalDateTime updatedAt;
 
     @Column(name = "deletedAt")
     private LocalDateTime deletedAt;

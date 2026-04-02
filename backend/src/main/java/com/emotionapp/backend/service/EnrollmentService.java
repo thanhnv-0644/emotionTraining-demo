@@ -1,6 +1,8 @@
 package com.emotionapp.backend.service;
 
+import com.emotionapp.backend.dto.request.AdminEnrollRequest;
 import com.emotionapp.backend.dto.response.CourseResponse;
+import com.emotionapp.backend.dto.response.EnrollmentResponse;
 import com.emotionapp.backend.entity.Course;
 import com.emotionapp.backend.entity.Enrollment;
 import com.emotionapp.backend.entity.User;
@@ -65,6 +67,77 @@ public class EnrollmentService {
                 .filter(e -> e.getStatus() == Enrollment.Status.active)
                 .map(e -> toCourseResponse(e.getCourse(), userId))
                 .collect(Collectors.toList());
+    }
+
+    // ─── Admin APIs ───────────────────────────────────────────────────────────
+
+    public List<EnrollmentResponse> adminGetAllEnrollments(String userId, String courseId) {
+        List<Enrollment> enrollments;
+        if (userId != null) {
+            enrollments = enrollmentRepository.findByUserId(userId);
+        } else if (courseId != null) {
+            enrollments = enrollmentRepository.findByCourseId(courseId);
+        } else {
+            enrollments = enrollmentRepository.findAll();
+        }
+        return enrollments.stream().map(this::toEnrollmentResponse).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public EnrollmentResponse adminEnroll(AdminEnrollRequest request) {
+        String userId   = request.getUserId();
+        String courseId = request.getCourseId();
+
+        userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+        courseRepository.findById(courseId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Course not found"));
+
+        if (enrollmentRepository.existsByUserIdAndCourseId(userId, courseId)) {
+            throw new AppException(HttpStatus.CONFLICT, "User already enrolled in this course");
+        }
+
+        User user     = userRepository.findById(userId).get();
+        Course course = courseRepository.findById(courseId).get();
+
+        LocalDateTime now = LocalDateTime.now();
+        Enrollment enrollment = Enrollment.builder()
+                .id(IdGenerator.generateId())
+                .user(user)
+                .course(course)
+                .status(Enrollment.Status.active)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        enrollmentRepository.save(enrollment);
+        return toEnrollmentResponse(enrollment);
+    }
+
+    @Transactional
+    public void adminRevokeEnrollment(String enrollmentId) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Enrollment not found"));
+        if (enrollment.getStatus() == Enrollment.Status.revoked) {
+            throw new AppException(HttpStatus.CONFLICT, "Enrollment already revoked");
+        }
+        enrollment.setStatus(Enrollment.Status.revoked);
+        enrollment.setUpdatedAt(LocalDateTime.now());
+        enrollmentRepository.save(enrollment);
+    }
+
+    private EnrollmentResponse toEnrollmentResponse(Enrollment e) {
+        return EnrollmentResponse.builder()
+                .id(e.getId())
+                .userId(e.getUser().getId())
+                .userName(e.getUser().getName())
+                .courseId(e.getCourse().getId())
+                .courseTitle(e.getCourse().getTitle())
+                .paymentId(e.getPayment() != null ? e.getPayment().getId() : null)
+                .status(e.getStatus().name())
+                .createdAt(e.getCreatedAt())
+                .updatedAt(e.getUpdatedAt())
+                .build();
     }
 
     private CourseResponse toCourseResponse(Course course, String userId) {

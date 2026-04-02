@@ -15,8 +15,6 @@ public class CreateCourseRequest {
 
     private int price;
 
-    private boolean isFree;
-
     @NotBlank(message = "Category is required")
     private String category;
 }

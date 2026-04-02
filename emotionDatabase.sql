@@ -15,6 +15,7 @@ CREATE TABLE `users` (
   `lastActiveAt` DATETIME         NULL,
   `status`       ENUM('active','inactive','suspended') NOT NULL DEFAULT 'active',
   `createdAt`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deletedAt`    DATETIME         NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_users_email` (`email`)
@@ -49,6 +50,7 @@ CREATE TABLE `courses` (
   `category`    ENUM('easy','medium','advanced')     NOT NULL DEFAULT 'easy',
   `createdAt`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deletedAt`   DATETIME         NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -65,6 +67,7 @@ CREATE TABLE `lessons` (
   `status`    ENUM('draft','published') NOT NULL DEFAULT 'draft',
   `createdAt` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deletedAt` DATETIME         NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_lessons_course` FOREIGN KEY (`courseId`) REFERENCES `courses` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -80,6 +83,9 @@ CREATE TABLE `audio_clips` (
   `duration`      INT              NULL COMMENT 'seconds',
   `targetEmotion` ENUM('happiness','sadness','anger','fear','surprise','disgust','neutral') NOT NULL,
   `order`         INT          NOT NULL DEFAULT 0,
+  `createdAt`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deletedAt`     DATETIME         NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_audio_clips_lesson` FOREIGN KEY (`lessonId`) REFERENCES `lessons` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -94,11 +100,12 @@ CREATE TABLE `payments` (
   `amount`          INT          NOT NULL,
   `currency`        VARCHAR(10)  NOT NULL DEFAULT 'VND',
   `method`          ENUM('momo','vnpay','stripe','bank') NOT NULL,
-  `status`          ENUM('pending','completed','failed','refunded') NOT NULL DEFAULT 'pending',
+  `status`          ENUM('pending','completed','failed','cancelled','expired','refunded') NOT NULL DEFAULT 'pending',
   `transactionId`   VARCHAR(255)     NULL,
   `gatewayResponse` JSON             NULL,
   `paidAt`          DATETIME         NULL,
   `failureReason`   TEXT             NULL,
+  `expiredAt`       DATETIME         NULL,
   `createdAt`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -116,6 +123,7 @@ CREATE TABLE `enrollments` (
   `paymentId` VARCHAR(30)     NULL COMMENT 'NULL nếu course miễn phí hoặc admin grant',
   `status`    ENUM('active','revoked') NOT NULL DEFAULT 'active',
   `createdAt` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_enrollments_user_course` (`userId`, `courseId`),
   CONSTRAINT `fk_enrollments_user`    FOREIGN KEY (`userId`)    REFERENCES `users` (`id`),
@@ -151,6 +159,7 @@ CREATE TABLE `reviews` (
   `comment`   TEXT            NULL,
   `createdAt` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deletedAt` DATETIME        NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_reviews_user_course` (`userId`, `courseId`),
   CONSTRAINT `fk_reviews_user`   FOREIGN KEY (`userId`)   REFERENCES `users` (`id`),
@@ -165,6 +174,7 @@ CREATE TABLE `wishlists` (
   `userId`    VARCHAR(30) NOT NULL,
   `courseId`  VARCHAR(30) NOT NULL,
   `createdAt` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `deletedAt` DATETIME        NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_wishlists_user_course` (`userId`, `courseId`),
   CONSTRAINT `fk_wishlists_user`   FOREIGN KEY (`userId`)   REFERENCES `users` (`id`),
@@ -172,3 +182,13 @@ CREATE TABLE `wishlists` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE `search_histories` (
+  `id`        VARCHAR(30)  NOT NULL,
+  `userId`    VARCHAR(30)  NOT NULL,
+  `keyword`   VARCHAR(255) NOT NULL,
+  `createdAt` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `deletedAt` DATETIME         NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_search_user` FOREIGN KEY (`userId`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,7 @@ public class AudioClipService {
     private final LessonRepository lessonRepository;
 
     public List<AudioClipResponse> getClipsByLesson(String lessonId) {
-        return audioClipRepository.findByLessonIdOrderByOrder(lessonId)
+        return audioClipRepository.findByLessonIdAndDeletedAtIsNullOrderByOrder(lessonId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -44,6 +45,8 @@ public class AudioClipService {
             }
         }
 
+        int nextOrder = audioClipRepository.countByLessonIdAndDeletedAtIsNull(lessonId) + 1;
+
         AudioClip clip = AudioClip.builder()
                 .id(IdGenerator.generateId())
                 .lesson(lesson)
@@ -51,7 +54,7 @@ public class AudioClipService {
                 .audioUrl(request.getAudioUrl())
                 .duration(request.getDuration())
                 .targetEmotion(emotion)
-                .order(request.getOrder())
+                .order(nextOrder)
                 .build();
 
         audioClipRepository.save(clip);
@@ -84,7 +87,9 @@ public class AudioClipService {
     public void deleteClip(String clipId) {
         AudioClip clip = audioClipRepository.findById(clipId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Audio clip not found"));
-        audioClipRepository.delete(clip);
+        clip.setDeletedAt(LocalDateTime.now());
+        clip.setUpdatedAt(LocalDateTime.now());
+        audioClipRepository.save(clip);
     }
 
     private AudioClipResponse toResponse(AudioClip clip) {

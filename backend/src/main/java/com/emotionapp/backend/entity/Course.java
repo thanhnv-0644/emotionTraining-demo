@@ -46,6 +46,9 @@ public class Course {
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
+    @Column(name = "deletedAt")
+    private LocalDateTime deletedAt;
+
     public enum Status {
         draft, published, archived
     }

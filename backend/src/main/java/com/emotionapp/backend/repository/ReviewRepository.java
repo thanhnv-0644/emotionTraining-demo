@@ -10,5 +10,7 @@ import java.util.Optional;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, String> {
     List<Review> findByCourseId(String courseId);
+    List<Review> findByCourseIdAndDeletedAtIsNullOrderByCreatedAtDesc(String courseId);
     Optional<Review> findByUserIdAndCourseId(String userId, String courseId);
+    Optional<Review> findByUserIdAndCourseIdAndDeletedAtIsNull(String userId, String courseId);
 }

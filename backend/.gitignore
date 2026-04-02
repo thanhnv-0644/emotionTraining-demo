@@ -34,3 +34,6 @@ build/
 
 ### Sensitive config - never commit real credentials ###
 src/main/resources/application.properties
+
+### Uploaded files ###
+uploads/

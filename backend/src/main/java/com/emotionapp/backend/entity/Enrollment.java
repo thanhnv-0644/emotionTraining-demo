@@ -36,6 +36,9 @@ public class Enrollment {
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
+    @Column(name = "updatedAt")
+    private LocalDateTime updatedAt;
+
     public enum Status {
         active, revoked
     }

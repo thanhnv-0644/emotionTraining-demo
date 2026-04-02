@@ -9,8 +9,6 @@ public class CreateLessonRequest {
     @NotBlank(message = "Title is required")
     private String title;
 
-    private int order;
-
     private String level;
 
     private Integer duration;

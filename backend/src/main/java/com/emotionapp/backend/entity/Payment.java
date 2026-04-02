@@ -54,14 +54,17 @@ public class Payment {
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
+    @Column(name = "expiredAt")
+    private LocalDateTime expiredAt;
+
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
     public enum Method {
-        momo, vnpay, stripe, bank
+        momo, vnpay
     }
 
     public enum Status {
-        pending, completed, failed, refunded
+        pending, completed, failed, cancelled, expired, refunded
     }
 }

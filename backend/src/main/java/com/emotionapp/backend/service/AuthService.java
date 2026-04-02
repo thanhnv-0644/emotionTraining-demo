@@ -58,6 +58,10 @@ public class AuthService {
             throw new AppException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
+        if (user.getDeletedAt() != null) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Account has been deactivated");
+        }
+
         if (user.getStatus() == User.Status.suspended) {
             throw new AppException(HttpStatus.FORBIDDEN, "Account is suspended");
         }

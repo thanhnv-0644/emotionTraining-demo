@@ -44,6 +44,9 @@ public class Lesson {
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
+    @Column(name = "deletedAt")
+    private LocalDateTime deletedAt;
+
     public enum Level {
         beginner, intermediate, advanced
     }

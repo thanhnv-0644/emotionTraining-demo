@@ -6,12 +6,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+@Table(name = "search_histories")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Review {
+public class SearchHistory {
 
     @Id
     @Column(name = "id", length = 30)
@@ -21,21 +21,11 @@ public class Review {
     @JoinColumn(name = "userId", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "courseId", nullable = false)
-    private Course course;
+    @Column(name = "keyword", nullable = false)
+    private String keyword;
 
-    @Column(name = "rating", nullable = false)
-    private Byte rating;
-
-    @Column(name = "comment", columnDefinition = "TEXT")
-    private String comment;
-
-    @Column(name = "createdAt")
+    @Column(name = "createdAt", nullable = false)
     private LocalDateTime createdAt;
-
-    @Column(name = "updatedAt")
-    private LocalDateTime updatedAt;
 
     @Column(name = "deletedAt")
     private LocalDateTime deletedAt;
