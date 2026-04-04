@@ -1,16 +1,20 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function UserSidebar() {
   const pathname = usePathname();
-  
+  const { user, logout } = useAuth();
+
   const navItems = [
-    { name: 'Home', icon: 'home', href: '/dashboard' },
-    { name: 'My Courses', icon: 'book_5', href: '/courses' },
+    { name: 'Dashboard', icon: 'home', href: '/dashboard' },
+    { name: 'Khoá học', icon: 'book_5', href: '/courses' },
+    { name: 'Wishlist', icon: 'favorite', href: '/wishlist' },
+    { name: 'Thanh toán', icon: 'receipt_long', href: '/payments' },
     { name: 'Analytics', icon: 'monitoring', href: '/analytics' },
-    { name: 'Achievements', icon: 'emoji_events', href: '/achievements' },
-    { name: 'Profile', icon: 'person', href: '/profile' },
+    { name: 'Thành tích', icon: 'emoji_events', href: '/achievements' },
+    { name: 'Hồ sơ', icon: 'person', href: '/profile' },
   ];
 
   return (
@@ -26,7 +30,7 @@ export default function UserSidebar() {
       </div>
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
             <Link
               key={item.name}
@@ -37,9 +41,7 @@ export default function UserSidebar() {
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
               }`}
             >
-              <span className={`material-symbols-outlined ${isActive ? 'fill-icon' : ''}`}>
-                {item.icon}
-              </span>
+              <span className={`material-symbols-outlined ${isActive ? 'fill-icon' : ''}`}>{item.icon}</span>
               <span className="text-sm">{item.name}</span>
             </Link>
           );
@@ -47,15 +49,19 @@ export default function UserSidebar() {
       </nav>
       <div className="p-4 border-t border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
-          <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
-            <img alt="Profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8wAOv6f0ddC35k7SIPGla2M_3OmmhpQbPUHcJ_tFDuB58hQtf_KVGGzEwjqdKrjtG9w1J3yHE4Jc8Wk4fb_bbTvudPTDfMxj-9A8RiAsFyR_ogCS9YCln_D-UVltXr-BWIqF4xNEENqCKaoV9pubITldvQfC4jsFLEDLc7bA4pVSMiKvJLDjfM60Vp8TMQwDHMLfHcBNrchW0VhNlHhxXM6BFxM4O4ir7reoG2vXK7pnqtm7wISxjZ1u7oGNmumHsbipJYZpq5MhY" />
+          <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+            {user?.avatar ? (
+              <img alt="Profile" className="w-full h-full object-cover" src={user.avatar} />
+            ) : (
+              <span className="material-symbols-outlined text-slate-500">person</span>
+            )}
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-semibold truncate">Alex Rivera</p>
-            <p className="text-xs text-slate-500 truncate">Premium Member</p>
+            <p className="text-sm font-semibold truncate">{user?.name ?? '...'}</p>
+            <p className="text-xs text-slate-500 truncate capitalize">{user?.role ?? ''}</p>
           </div>
-          <button className="text-slate-400 hover:text-slate-600">
-            <span className="material-symbols-outlined text-xl">settings</span>
+          <button onClick={logout} title="Đăng xuất" className="text-slate-400 hover:text-red-500 transition-colors">
+            <span className="material-symbols-outlined text-xl">logout</span>
           </button>
         </div>
       </div>

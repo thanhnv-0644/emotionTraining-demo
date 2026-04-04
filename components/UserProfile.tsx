@@ -1,9 +1,53 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  role: string;
+  xp: number;
+  status: string;
+}
 
 export default function UserProfile() {
-  const [isEditing, setIsEditing] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const data = await api.get<User>("/api/users/me");
+        setUser(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Lỗi tải hồ sơ");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="px-8 py-12 text-center">
+        <p className="text-slate-500">{error || "Không thể tải hồ sơ"}</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -15,23 +59,30 @@ export default function UserProfile() {
               <img
                 alt="Profile"
                 className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwzynq91QDFMdy9L8KWmYqfOZKNNZ-xGEFyXbngHia1WEAyGixShil6rO-M1zR1AMYm6-fLJRR9taxWWox_vWZWCwTjm4TVJ4Vpipkk-rfA0lVBqmSa3LgCJ-Dsd6Vu9aFDf04m3luLRAOyGufZM14dhrqfTeqYLr_3efVbBporYJeVZC6BZMMh_FsFIDd8pqwy5agbQhg8NdqFZUTLq4565If6P7w4aoExkZOSoNSoQvui_DGpsSI3irjl9ILviu8ppWgpf5YtV6Y"
+                src={user.avatar || "https://via.placeholder.com/96"}
               />
             </div>
             <button className="absolute bottom-0 right-0 p-1.5 bg-primary text-white rounded-full shadow-md hover:bg-primary/90 transition-colors">
-              <span className="material-symbols-outlined text-sm">photo_camera</span>
+              <span className="material-symbols-outlined text-sm">
+                photo_camera
+              </span>
             </button>
           </div>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Alex Johnson</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{user.name}</h2>
             <div className="flex items-center gap-3 mt-1">
               <span className="px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider">
-                Level 14
+                XP: {user.xp.toLocaleString()}
               </span>
-              <div className="w-32 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                <div className="bg-secondary w-3/4 h-full"></div>
-              </div>
-              <span className="text-xs text-slate-500">75% to Level 15</span>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                  user.status === "active"
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                }`}
+              >
+                {user.status}
+              </span>
             </div>
           </div>
         </div>
@@ -56,29 +107,26 @@ export default function UserProfile() {
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
                   Full Name
                 </label>
-                <p className="text-sm font-medium">Alex Johnson</p>
+                <p className="text-sm font-medium">{user.name}</p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
                   Email Address
                 </label>
-                <p className="text-sm font-medium">alex.johnson@example.com</p>
+                <p className="text-sm font-medium">{user.email}</p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
-                  Location
+                  Role
                 </label>
-                <p className="text-sm font-medium flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs">location_on</span>
-                  San Francisco, CA
-                </p>
+                <p className="text-sm font-medium capitalize">{user.role}</p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
-                  Bio
+                  Total XP
                 </label>
-                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                  Passionate about emotional intelligence and behavioral science. Currently focusing on developing resilience through daily practice.
+                <p className="text-sm font-medium">
+                  {user.xp.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -96,7 +144,9 @@ export default function UserProfile() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold">Change Password</p>
-                  <p className="text-xs text-slate-500">Update your security credentials</p>
+                  <p className="text-xs text-slate-500">
+                    Update your security credentials
+                  </p>
                 </div>
                 <button className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                   UPDATE
@@ -104,14 +154,18 @@ export default function UserProfile() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold">Two-Factor Authentication</p>
-                  <p className="text-xs text-slate-500">Add an extra layer of security</p>
+                  <p className="text-sm font-semibold">
+                    Two-Factor Authentication
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Add an extra layer of security
+                  </p>
                 </div>
                 <Toggle defaultChecked />
               </div>
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                 <p className="text-xs text-slate-500 italic">
-                  Last login: 2 hours ago from San Francisco, CA
+                  User ID: {user.id}
                 </p>
               </div>
             </div>
@@ -120,14 +174,24 @@ export default function UserProfile() {
           {/* Notification Settings */}
           <section className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center gap-2 mb-6 text-secondary">
-              <span className="material-symbols-outlined">notifications_active</span>
+              <span className="material-symbols-outlined">
+                notifications_active
+              </span>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                 Notification Settings
               </h3>
             </div>
             <div className="space-y-5">
-              <NotificationToggle icon="trending_up" label="Email alerts for progress" defaultChecked />
-              <NotificationToggle icon="calendar_month" label="Weekly reports" defaultChecked />
+              <NotificationToggle
+                icon="trending_up"
+                label="Email alerts for progress"
+                defaultChecked
+              />
+              <NotificationToggle
+                icon="calendar_month"
+                label="Weekly reports"
+                defaultChecked
+              />
               <NotificationToggle icon="volume_up" label="Achievement sounds" />
             </div>
           </section>
@@ -145,26 +209,39 @@ export default function UserProfile() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="bg-white dark:bg-slate-900 p-2 rounded-lg shadow-sm">
-                      <span className="material-symbols-outlined text-slate-600">public</span>
+                      <span className="material-symbols-outlined text-slate-600">
+                        public
+                      </span>
                     </div>
                     <div>
                       <p className="text-sm font-bold">Public Profile</p>
-                      <p className="text-xs text-slate-500">Allow others to see your achievements</p>
+                      <p className="text-xs text-slate-500">
+                        Allow others to see your achievements
+                      </p>
                     </div>
                   </div>
                   <Toggle defaultChecked />
                 </div>
               </div>
               <div className="space-y-3 px-1">
-                <p className="text-sm font-semibold">Profile Visibility Settings</p>
+                <p className="text-sm font-semibold">
+                  Profile Visibility Settings
+                </p>
                 <div className="flex items-center gap-2">
-                  <input defaultChecked className="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox" />
+                  <input
+                    defaultChecked
+                    className="rounded border-slate-300 text-primary focus:ring-primary"
+                    type="checkbox"
+                  />
                   <label className="text-xs text-slate-600 dark:text-slate-400">
                     Show current level on leaderboard
                   </label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input className="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox" />
+                  <input
+                    className="rounded border-slate-300 text-primary focus:ring-primary"
+                    type="checkbox"
+                  />
                   <label className="text-xs text-slate-600 dark:text-slate-400">
                     Share course progress with mentors
                   </label>
@@ -191,13 +268,25 @@ export default function UserProfile() {
 function Toggle({ defaultChecked = false }: { defaultChecked?: boolean }) {
   return (
     <label className="relative inline-flex items-center cursor-pointer">
-      <input defaultChecked={defaultChecked} className="sr-only peer" type="checkbox" />
+      <input
+        defaultChecked={defaultChecked}
+        className="sr-only peer"
+        type="checkbox"
+      />
       <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
     </label>
   );
 }
 
-function NotificationToggle({ icon, label, defaultChecked = false }: { icon: string; label: string; defaultChecked?: boolean }) {
+function NotificationToggle({
+  icon,
+  label,
+  defaultChecked = false,
+}: {
+  icon: string;
+  label: string;
+  defaultChecked?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">

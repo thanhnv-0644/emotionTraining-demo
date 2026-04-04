@@ -1,13 +1,23 @@
-'use client';
+import type { GetServerSideProps } from 'next';
 
 import LessonResult from '@/components/LessonResult';
 
 interface Props {
-  params: Promise<{ courseId: string; lessonId: string }>;
+  courseId: string;
+  lessonId: string;
 }
 
-export default async function LessonResultPage({ params }: Props) {
-  const { courseId, lessonId } = await params;
+export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+  const { courseId, lessonId } = context.params || {};
+  return {
+    props: {
+      courseId: typeof courseId === 'string' ? courseId : '',
+      lessonId: typeof lessonId === 'string' ? lessonId : '',
+    },
+  };
+};
+
+export default function LessonResultPage({ courseId, lessonId }: Props) {
 
   // Sample result data - in production, this would come from your backend
   // based on the lesson completion data

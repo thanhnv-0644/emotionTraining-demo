@@ -1,6 +1,4 @@
-'use client';
-
-import { useState } from 'react';
+import type { GetServerSideProps } from 'next';
 import LessonSession from '@/components/LessonSession';
 
 interface AudioClip {
@@ -19,8 +17,19 @@ interface LessonData {
 }
 
 interface Props {
-  params: Promise<{ courseId: string; lessonId: string }>;
+  courseId: string;
+  lessonId: string;
 }
+
+export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+  const { courseId, lessonId } = context.params || {};
+  return {
+    props: {
+      courseId: typeof courseId === 'string' ? courseId : '',
+      lessonId: typeof lessonId === 'string' ? lessonId : '',
+    },
+  };
+};
 
 // Sample data
 const lessonsData: { [key: string]: { [key: string]: LessonData } } = {
@@ -74,8 +83,7 @@ const lessonsData: { [key: string]: { [key: string]: LessonData } } = {
   },
 };
 
-export default async function LessonSessionPage({ params }: Props) {
-  const { courseId, lessonId } = await params;
+export default function LessonSessionPage({ courseId, lessonId }: Props) {
   const lesson = lessonsData[courseId as keyof typeof lessonsData]?.[lessonId];
 
   if (!lesson) {

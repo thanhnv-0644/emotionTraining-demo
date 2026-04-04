@@ -1,6 +1,5 @@
-'use client';
+import type { GetServerSideProps } from 'next';
 
-import { useState } from 'react';
 import CourseLesson from '@/components/CourseLesson';
 
 interface Lesson {
@@ -14,8 +13,17 @@ interface Lesson {
 }
 
 interface Props {
-  params: Promise<{ courseId: string }>;
+  courseId: string;
 }
+
+export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+  const { courseId } = context.params || {};
+  return {
+    props: {
+      courseId: typeof courseId === 'string' ? courseId : '',
+    },
+  };
+};
 
 // Sample data
 const coursesData: { [key: string]: { id: string; name: string; description: string; lessons: Lesson[] } } = {
@@ -101,8 +109,7 @@ const coursesData: { [key: string]: { id: string; name: string; description: str
   },
 };
 
-export default async function CourseLessonsPage({ params }: Props) {
-  const { courseId } = await params;
+export default function CourseLessonsPage({ courseId }: Props) {
   const course = coursesData[courseId as keyof typeof coursesData];
 
   if (!course) {
