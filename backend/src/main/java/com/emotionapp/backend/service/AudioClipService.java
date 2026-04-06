@@ -46,6 +46,7 @@ public class AudioClipService {
         }
 
         int nextOrder = audioClipRepository.countByLessonIdAndDeletedAtIsNull(lessonId) + 1;
+        LocalDateTime now = LocalDateTime.now();
 
         AudioClip clip = AudioClip.builder()
                 .id(IdGenerator.generateId())
@@ -55,6 +56,8 @@ public class AudioClipService {
                 .duration(request.getDuration())
                 .targetEmotion(emotion)
                 .order(nextOrder)
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
 
         audioClipRepository.save(clip);
@@ -70,6 +73,7 @@ public class AudioClipService {
         if (request.getAudioUrl() != null) clip.setAudioUrl(request.getAudioUrl());
         if (request.getDuration() != null) clip.setDuration(request.getDuration());
         clip.setOrder(request.getOrder());
+        clip.setUpdatedAt(LocalDateTime.now());
 
         if (request.getTargetEmotion() != null) {
             try {

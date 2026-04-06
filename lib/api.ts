@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -30,6 +30,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
   const data = await res.json();
+
+  if (res.status === 401) {
+    clearTokens();
+    if (typeof window !== 'undefined') window.location.href = '/login';
+    throw new Error('Phiên đăng nhập hết hạn');
+  }
 
   if (!res.ok) {
     throw new Error(data.message || 'Đã có lỗi xảy ra');

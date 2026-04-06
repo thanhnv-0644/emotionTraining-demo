@@ -1,140 +1,127 @@
-import type { GetServerSideProps } from 'next';
-
+import { useEffect, useState, ReactNode } from 'react';
+import { useRouter } from 'next/router';
 import CourseLesson from '@/components/CourseLesson';
+import { api } from '@/lib/api';
+import UserLayout from '@/components/UserLayout';
 
-interface Lesson {
+interface LessonResponse {
   id: string;
-  number: number;
-  title: string;
-  duration: string;
-  level: 'beginner' | 'intermediate' | 'advanced';
-  status: 'completed' | 'in-progress' | 'locked';
-  score?: number;
-}
-
-interface Props {
   courseId: string;
+  title: string;
+  order: number;
+  level: string;
+  duration: number;
+  status: string;
+  audioClipCount: number;
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
-  const { courseId } = context.params || {};
-  return {
-    props: {
-      courseId: typeof courseId === 'string' ? courseId : '',
-    },
-  };
-};
+interface CourseDetailResponse {
+  id: string;
+  title: string;
+  description: string;
+  image: string | null;
+  category: string;
+  lessonCount: number;
+  enrolled: boolean;
+  isFree: boolean;
+  lessons: LessonResponse[];
+}
 
-// Sample data
-const coursesData: { [key: string]: { id: string; name: string; description: string; lessons: Lesson[] } } = {
-  'react-basics': {
-    id: 'react-basics',
-    name: 'React Emotion Recognition',
-    description: 'Learn to recognize and classify emotions in speech',
-    lessons: [
-      {
-        id: 'lesson-1',
-        number: 1,
-        title: 'Happiness Recognition',
-        duration: '5 min',
-        level: 'beginner',
-        status: 'completed',
-        score: 92,
-      },
-      {
-        id: 'lesson-2',
-        number: 2,
-        title: 'Sadness Detection',
-        duration: '5 min',
-        level: 'beginner',
-        status: 'in-progress',
-      },
-      {
-        id: 'lesson-3',
-        number: 3,
-        title: 'Anger Identification',
-        duration: '5 min',
-        level: 'intermediate',
-        status: 'locked',
-      },
-      {
-        id: 'lesson-4',
-        number: 4,
-        title: 'Fear Recognition',
-        duration: '5 min',
-        level: 'intermediate',
-        status: 'locked',
-      },
-      {
-        id: 'lesson-5',
-        number: 5,
-        title: 'Surprise Detection',
-        duration: '5 min',
-        level: 'intermediate',
-        status: 'locked',
-      },
-    ],
-  },
-  'nlp-advanced': {
-    id: 'nlp-advanced',
-    name: 'Advanced NLP Techniques',
-    description: 'Master advanced emotion analysis techniques',
-    lessons: [
-      {
-        id: 'lesson-1',
-        number: 1,
-        title: 'Context-Based Analysis',
-        duration: '8 min',
-        level: 'advanced',
-        status: 'completed',
-        score: 88,
-      },
-      {
-        id: 'lesson-2',
-        number: 2,
-        title: 'Multi-Emotion Detection',
-        duration: '8 min',
-        level: 'advanced',
-        status: 'in-progress',
-      },
-      {
-        id: 'lesson-3',
-        number: 3,
-        title: 'Temporal Emotion Flow',
-        duration: '8 min',
-        level: 'advanced',
-        status: 'locked',
-      },
-    ],
-  },
-};
+interface ProgressResponse {
+  id: string;
+  lessonId: string;
+  score: number | null;
+  completedAt: string | null;
+  attemptNumber: number;
+}
 
-export default function CourseLessonsPage({ courseId }: Props) {
-  const course = coursesData[courseId as keyof typeof coursesData];
+function formatDuration(seconds: number): string {
+  if (!seconds) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
-  if (!course) {
+export default function CourseLessonsPage() {
+  const router = useRouter();
+  const { courseId } = router.query as { courseId: string };
+
+  const [course, setCourse] = useState<CourseDetailResponse | null>(null);
+  const [progresses, setProgresses] = useState<ProgressResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!courseId) return;
+    Promise.all([
+      api.get<CourseDetailResponse>(`/api/courses/${courseId}`),
+      api.get<ProgressResponse[]>('/api/users/me/progress'),
+    ]).then(([c, p]) => {
+      setCourse(c);
+      setProgresses(p ?? []);
+    }).catch(() => setError('Không thể tải khoá học.'))
+      .finally(() => setLoading(false));
+  }, [courseId]);
+
+  if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center flex-1">
+        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Course not found</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">The course you&apos;re looking for doesn&apos;t exist.</p>
+          <h1 className="text-2xl font-bold">Không tìm thấy khoá học</h1>
+          <p className="mt-2 text-slate-500">{error || 'Khoá học không tồn tại.'}</p>
         </div>
       </div>
     );
   }
 
-  const completedLessons = course.lessons.filter((l) => l.status === 'completed').length;
-  const totalLessons = course.lessons.length;
-  const progress = (completedLessons / totalLessons) * 100;
+  // Compute status for each lesson based on progress
+  const completedLessonIds = new Set(
+    progresses.filter(p => p.score !== null).map(p => p.lessonId)
+  );
+
+  const lessons = course.lessons.map((lesson, index) => {
+    let lessonStatus: 'completed' | 'in-progress' | 'locked';
+    if (completedLessonIds.has(lesson.id)) {
+      lessonStatus = 'completed';
+    } else {
+      const firstIncomplete = course.lessons.findIndex(l => !completedLessonIds.has(l.id));
+      lessonStatus = index === firstIncomplete ? 'in-progress' : 'locked';
+    }
+    const progress = progresses.find(p => p.lessonId === lesson.id);
+    return {
+      id: lesson.id,
+      number: lesson.order,
+      title: lesson.title,
+      duration: formatDuration(lesson.duration ?? 0),
+      level: lesson.level as 'beginner' | 'intermediate' | 'advanced',
+      status: lessonStatus,
+      score: progress?.score ?? undefined,
+    };
+  });
+
+  const completedCount = lessons.filter(l => l.status === 'completed').length;
+  const progress = course.lessons.length > 0
+    ? Math.round((completedCount / course.lessons.length) * 100)
+    : 0;
 
   return (
     <CourseLesson
       courseId={course.id}
-      courseName={course.name}
-      lessons={course.lessons}
+      courseName={course.title}
+      lessons={lessons}
       progress={progress}
-      completedLessons={completedLessons}
-      totalLessons={totalLessons}
+      completedLessons={completedCount}
+      totalLessons={course.lessons.length}
     />
   );
 }
+
+CourseLessonsPage.getLayout = (page: ReactNode) => <UserLayout>{page}</UserLayout>;

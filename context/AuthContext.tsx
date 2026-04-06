@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 import { api, setTokens, clearTokens } from '@/lib/api';
 
 interface User {
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.user.role === 'admin') {
       router.push('/admin');
     } else {
-      router.push('/dashboard');
+      router.push('/user/dashboard');
     }
   };
 
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
     setTokens(data.accessToken, data.refreshToken);
     setUser(data.user);
-    router.push('/dashboard');
+    router.push('/user/dashboard');
   };
 
   const logout = async () => {

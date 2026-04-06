@@ -1,43 +1,58 @@
-import type { GetServerSideProps } from 'next';
-
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import LessonResult from '@/components/LessonResult';
 
-interface Props {
-  courseId: string;
-  lessonId: string;
+interface AnswerItem {
+  question: string;
+  selected: string;
+  correct: string;
+  status: 'correct' | 'incorrect';
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
-  const { courseId, lessonId } = context.params || {};
-  return {
-    props: {
-      courseId: typeof courseId === 'string' ? courseId : '',
-      lessonId: typeof lessonId === 'string' ? lessonId : '',
-    },
-  };
-};
+interface ResultData {
+  lessonTitle: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  answers: AnswerItem[];
+}
 
-export default function LessonResultPage({ courseId, lessonId }: Props) {
+export default function LessonResultPage() {
+  const router = useRouter();
+  const { courseId, lessonId } = router.query as { courseId: string; lessonId: string };
+  const [result, setResult] = useState<ResultData | null>(null);
 
-  // Sample result data - in production, this would come from your backend
-  // based on the lesson completion data
-  const resultData = {
-    lessonTitle: 'Happiness Recognition',
-    score: 85,
-    totalQuestions: 5,
-    correctAnswers: 4,
-    timeSpent: '12m 45s',
-  };
+  useEffect(() => {
+    const raw = sessionStorage.getItem('lessonResult');
+    if (raw) {
+      try {
+        setResult(JSON.parse(raw));
+      } catch {
+        // malformed data — redirect back
+        router.replace(`/user/courses/${courseId}`);
+      }
+    } else {
+      router.replace(`/user/courses/${courseId}`);
+    }
+  }, [courseId, router]);
+
+  if (!result) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <LessonResult
       courseId={courseId}
       lessonId={lessonId}
-      lessonTitle={resultData.lessonTitle}
-      score={resultData.score}
-      totalQuestions={resultData.totalQuestions}
-      correctAnswers={resultData.correctAnswers}
-      timeSpent={resultData.timeSpent}
+      lessonTitle={result.lessonTitle}
+      score={result.score}
+      totalQuestions={result.totalQuestions}
+      correctAnswers={result.correctAnswers}
+      answers={result.answers}
     />
   );
 }

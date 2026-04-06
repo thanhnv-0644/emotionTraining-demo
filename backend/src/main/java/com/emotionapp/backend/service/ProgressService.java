@@ -64,12 +64,19 @@ public class ProgressService {
         List<UserProgress> previousAttempts = userProgressRepository.findByUserIdAndLessonId(userId, lessonId);
         int attemptNumber = previousAttempts.size() + 1;
 
-        // Serialize answers to JSON
+        // Serialize answers to JSON — format Analytics có thể đọc được
         String answersJson;
         try {
-            answersJson = objectMapper.writeValueAsString(request.getAnswers());
+            List<Map<String, String>> enriched = request.getAnswers().stream()
+                    .map(a -> Map.of(
+                            "audioClipId",    a.getAudioClipId(),
+                            "correctAnswer",  clipEmotionMap.getOrDefault(a.getAudioClipId(), ""),
+                            "userAnswer",     a.getSelectedEmotion()
+                    ))
+                    .collect(Collectors.toList());
+            answersJson = objectMapper.writeValueAsString(Map.of("answers", enriched));
         } catch (JsonProcessingException e) {
-            answersJson = "[]";
+            answersJson = "{\"answers\":[]}";
         }
 
         UserProgress progress = UserProgress.builder()
@@ -121,7 +128,9 @@ public class ProgressService {
         return ProgressResponse.builder()
                 .id(p.getId())
                 .userId(p.getUser().getId())
+                .userName(p.getUser().getName())
                 .lessonId(p.getLesson().getId())
+                .lessonTitle(p.getLesson().getTitle())
                 .attemptNumber(p.getAttemptNumber())
                 .score(p.getScore())
                 .completedAt(p.getCompletedAt())

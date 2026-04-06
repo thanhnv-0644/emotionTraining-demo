@@ -1,110 +1,87 @@
-import type { GetServerSideProps } from 'next';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import LessonSession from '@/components/LessonSession';
+import { api, BASE_URL } from '@/lib/api';
 
-interface AudioClip {
+interface AudioClipResponse {
   id: string;
-  subject: string;
-  scenario: string;
-  duration: string;
-  url?: string;
-}
-
-interface LessonData {
-  id: string;
-  title: string;
-  description: string;
-  audioClips: AudioClip[];
-}
-
-interface Props {
-  courseId: string;
   lessonId: string;
+  subject: string;
+  audioUrl: string;
+  duration: number;
+  targetEmotion: string;
+  order: number;
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
-  const { courseId, lessonId } = context.params || {};
-  return {
-    props: {
-      courseId: typeof courseId === 'string' ? courseId : '',
-      lessonId: typeof lessonId === 'string' ? lessonId : '',
-    },
-  };
-};
+interface LessonDetailResponse {
+  id: string;
+  courseId: string;
+  title: string;
+  order: number;
+  level: string;
+  duration: number;
+  audioClips: AudioClipResponse[];
+}
 
-// Sample data
-const lessonsData: { [key: string]: { [key: string]: LessonData } } = {
-  'react-basics': {
-    'lesson-1': {
-      id: 'lesson-1',
-      title: 'Happiness Recognition',
-      description: 'Learn to recognize happy emotions in speech patterns and voice tone.',
-      audioClips: [
-        { id: 'clip-1', subject: 'Understanding Joy', scenario: 'Someone sharing good news', duration: '00:37' },
-        { id: 'clip-2', subject: 'Excitement Expression', scenario: 'Person excited about an event', duration: '00:42' },
-        { id: 'clip-3', subject: 'Cheerful Voice', scenario: 'Happy greeting', duration: '00:35' },
-        { id: 'clip-4', subject: 'Laughter Context', scenario: 'Person laughing', duration: '00:40' },
-        { id: 'clip-5', subject: 'Positive Tone', scenario: 'Celebrating success', duration: '00:38' },
-      ],
-    },
-    'lesson-2': {
-      id: 'lesson-2',
-      title: 'Sadness Detection',
-      description: 'Learn to identify sad emotions in speech and voice characteristics.',
-      audioClips: [
-        { id: 'clip-1', subject: 'Understanding Sorrow', scenario: 'Discussing loss', duration: '00:40' },
-        { id: 'clip-2', subject: 'Melancholic Voice', scenario: 'Expressing disappointment', duration: '00:38' },
-        { id: 'clip-3', subject: 'Mournful Tone', scenario: 'Sad news reaction', duration: '00:42' },
-        { id: 'clip-4', subject: 'Emotional Pain', scenario: 'Difficulty speaking', duration: '00:36' },
-        { id: 'clip-5', subject: 'Depressed Mood', scenario: 'Low energy speech', duration: '00:41' },
-      ],
-    },
-    'lesson-3': {
-      id: 'lesson-3',
-      title: 'Anger Identification',
-      description: 'Learn to recognize angry emotions in speech patterns.',
-      audioClips: [
-        { id: 'clip-1', subject: 'Irritation Expression', scenario: 'Minor frustration', duration: '00:35' },
-        { id: 'clip-2', subject: 'Raised Voice', scenario: 'Angry confrontation', duration: '00:39' },
-        { id: 'clip-3', subject: 'Hostile Tone', scenario: 'Aggressive response', duration: '00:37' },
-      ],
-    },
-  },
-  'nlp-advanced': {
-    'lesson-1': {
-      id: 'lesson-1',
-      title: 'Context-Based Analysis',
-      description: 'Advanced techniques for analyzing emotions based on context.',
-      audioClips: [
-        { id: 'clip-1', subject: 'Context Interpretation', scenario: 'Sarcastic speech', duration: '00:45' },
-        { id: 'clip-2', subject: 'Emotional Nuance', scenario: 'Mixed emotions', duration: '00:50' },
-        { id: 'clip-3', subject: 'Hidden Emotions', scenario: 'Masked feelings', duration: '00:48' },
-      ],
-    },
-  },
-};
+function formatDuration(seconds: number): string {
+  if (!seconds) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
-export default function LessonSessionPage({ courseId, lessonId }: Props) {
-  const lesson = lessonsData[courseId as keyof typeof lessonsData]?.[lessonId];
+export default function LessonSessionPage() {
+  const router = useRouter();
+  const { courseId, lessonId } = router.query as { courseId: string; lessonId: string };
 
-  if (!lesson) {
+  const [lesson, setLesson] = useState<LessonDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!lessonId) return;
+    api.get<LessonDetailResponse>(`/api/lessons/${lessonId}`)
+      .then(setLesson)
+      .catch(() => setError('Không thể tải bài học.'))
+      .finally(() => setLoading(false));
+  }, [lessonId]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !lesson) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lesson not found</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">The lesson you&apos;re looking for doesn&apos;t exist.</p>
+          <h1 className="text-2xl font-bold">Không tìm thấy bài học</h1>
+          <p className="mt-2 text-slate-500">{error || 'Bài học không tồn tại.'}</p>
         </div>
       </div>
     );
   }
+
+  const audioClips = (lesson.audioClips ?? [])
+    .sort((a, b) => a.order - b.order)
+    .map(clip => ({
+      id: clip.id,
+      subject: clip.subject,
+      scenario: clip.subject,
+      duration: formatDuration(clip.duration ?? 0),
+      url: `${BASE_URL}${clip.audioUrl}`,
+      targetEmotion: clip.targetEmotion,
+    }));
 
   return (
     <LessonSession
       courseId={courseId}
       lessonId={lessonId}
       lessonTitle={lesson.title}
-      audioClips={lesson.audioClips}
-      clipIndex={0}
-      totalClips={lesson.audioClips.length}
+      audioClips={audioClips}
     />
   );
 }

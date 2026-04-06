@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import AppPageHeader from "@/components/AppPageHeader";
 
 interface User {
   id: string;
@@ -51,79 +52,80 @@ export default function UserProfile() {
 
   return (
     <>
-      {/* Header Section */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 px-8 pt-8">
-        <div className="flex items-center gap-6">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full border-4 border-white dark:border-slate-800 shadow-lg overflow-hidden bg-slate-200">
-              <img
-                alt="Profile"
-                className="w-full h-full object-cover"
-                src={user.avatar || "https://via.placeholder.com/96"}
-              />
-            </div>
-            <button className="absolute bottom-0 right-0 p-1.5 bg-primary text-white rounded-full shadow-md hover:bg-primary/90 transition-colors">
-              <span className="material-symbols-outlined text-sm">
-                photo_camera
-              </span>
-            </button>
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">{user.name}</h2>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider">
-                XP: {user.xp.toLocaleString()}
-              </span>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-                  user.status === "active"
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                    : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
-                }`}
-              >
-                {user.status}
-              </span>
-            </div>
-          </div>
-        </div>
-        <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-shadow shadow-md">
-          <span className="material-symbols-outlined text-lg">edit</span>
-          Edit Profile
-        </button>
-      </header>
+      <AppPageHeader>
+        <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl">Hồ sơ</h1>
+      </AppPageHeader>
 
-      <div className="px-8 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl">
+      <div className="app-content">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-slate-200 shadow-lg dark:border-slate-800">
+                <img
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                  src={user.avatar || "https://via.placeholder.com/96"}
+                />
+              </div>
+              <button type="button" className="absolute bottom-0 right-0 rounded-full bg-primary p-1.5 text-white shadow-md transition-colors hover:bg-primary/90">
+                <span className="material-symbols-outlined text-sm">photo_camera</span>
+              </button>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">{user.name}</h2>
+              <div className="mt-1 flex items-center gap-3">
+                <span className="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-secondary">
+                  XP: {user.xp.toLocaleString()}
+                </span>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider ${
+                    user.status === "active"
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                      : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                  }`}
+                >
+                  {user.status}
+                </span>
+              </div>
+            </div>
+          </div>
+          <button type="button" className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 font-semibold text-white shadow-md transition-shadow hover:bg-primary/90">
+            <span className="material-symbols-outlined text-lg">edit</span>
+            Chỉnh sửa
+          </button>
+        </div>
+
+        <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-8 md:grid-cols-2">
           {/* Personal Information */}
-          <section className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center gap-2 mb-6 text-primary">
               <span className="material-symbols-outlined">badge</span>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Personal Information
+                Thông tin cá nhân
               </h3>
             </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
-                  Full Name
+                  Họ và tên
                 </label>
                 <p className="text-sm font-medium">{user.name}</p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
-                  Email Address
+                  Email
                 </label>
                 <p className="text-sm font-medium">{user.email}</p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
-                  Role
+                  Vai trò
                 </label>
                 <p className="text-sm font-medium capitalize">{user.role}</p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
-                  Total XP
+                  Tổng XP
                 </label>
                 <p className="text-sm font-medium">
                   {user.xp.toLocaleString()}
@@ -133,75 +135,75 @@ export default function UserProfile() {
           </section>
 
           {/* Account Security */}
-          <section className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center gap-2 mb-6 text-primary">
               <span className="material-symbols-outlined">security</span>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Account Security
+                Bảo mật tài khoản
               </h3>
             </div>
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold">Change Password</p>
+                  <p className="text-sm font-semibold">Đổi mật khẩu</p>
                   <p className="text-xs text-slate-500">
-                    Update your security credentials
+                    Cập nhật thông tin đăng nhập
                   </p>
                 </div>
-                <button className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                  UPDATE
+                <button type="button" className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  CẬP NHẬT
                 </button>
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold">
-                    Two-Factor Authentication
+                    Xác thực hai lớp
                   </p>
                   <p className="text-xs text-slate-500">
-                    Add an extra layer of security
+                    Tăng cường bảo vệ tài khoản
                   </p>
                 </div>
                 <Toggle defaultChecked />
               </div>
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                 <p className="text-xs text-slate-500 italic">
-                  User ID: {user.id}
+                  Mã người dùng: {user.id}
                 </p>
               </div>
             </div>
           </section>
 
           {/* Notification Settings */}
-          <section className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center gap-2 mb-6 text-secondary">
               <span className="material-symbols-outlined">
                 notifications_active
               </span>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Notification Settings
+                Thông báo
               </h3>
             </div>
             <div className="space-y-5">
               <NotificationToggle
                 icon="trending_up"
-                label="Email alerts for progress"
+                label="Email nhắc tiến độ"
                 defaultChecked
               />
               <NotificationToggle
                 icon="calendar_month"
-                label="Weekly reports"
+                label="Báo cáo hàng tuần"
                 defaultChecked
               />
-              <NotificationToggle icon="volume_up" label="Achievement sounds" />
+              <NotificationToggle icon="volume_up" label="Âm thanh thành tích" />
             </div>
           </section>
 
           {/* Privacy & Profile Appearance */}
-          <section className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center gap-2 mb-6 text-secondary">
               <span className="material-symbols-outlined">visibility</span>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Privacy & Profile
+                Riêng tư và hiển thị
               </h3>
             </div>
             <div className="space-y-6">
@@ -214,9 +216,9 @@ export default function UserProfile() {
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-bold">Public Profile</p>
+                      <p className="text-sm font-bold">Hồ sơ công khai</p>
                       <p className="text-xs text-slate-500">
-                        Allow others to see your achievements
+                        Cho phép người khác xem thành tích
                       </p>
                     </div>
                   </div>
@@ -225,7 +227,7 @@ export default function UserProfile() {
               </div>
               <div className="space-y-3 px-1">
                 <p className="text-sm font-semibold">
-                  Profile Visibility Settings
+                  Ai được xem thông tin
                 </p>
                 <div className="flex items-center gap-2">
                   <input
@@ -234,7 +236,7 @@ export default function UserProfile() {
                     type="checkbox"
                   />
                   <label className="text-xs text-slate-600 dark:text-slate-400">
-                    Show current level on leaderboard
+                    Hiển thị cấp độ trên bảng xếp hạng
                   </label>
                 </div>
                 <div className="flex items-center gap-2">
@@ -243,7 +245,7 @@ export default function UserProfile() {
                     type="checkbox"
                   />
                   <label className="text-xs text-slate-600 dark:text-slate-400">
-                    Share course progress with mentors
+                    Chia sẻ tiến độ khoá học với mentor
                   </label>
                 </div>
               </div>
@@ -252,12 +254,12 @@ export default function UserProfile() {
         </div>
 
         {/* Footer Action Bar */}
-        <footer className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4 max-w-5xl">
+        <footer className="mx-auto mt-12 flex max-w-5xl justify-end gap-4 border-t border-slate-200 pt-8 dark:border-slate-800">
           <button className="px-6 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-            Discard Changes
+            Huỷ thay đổi
           </button>
-          <button className="px-8 py-2 text-sm font-semibold bg-primary text-white rounded-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-            Save Changes
+          <button type="button" className="px-8 py-2 text-sm font-semibold bg-primary text-white rounded-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            Lưu thay đổi
           </button>
         </footer>
       </div>

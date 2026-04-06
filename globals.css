@@ -2,9 +2,16 @@
 
 @theme {
   --color-primary: #2b6cee;
+  --color-secondary: #6366f1;
   --color-background-light: #f6f6f8;
   --color-background-dark: #101622;
   --font-display: var(--font-sans);
+}
+
+@layer components {
+  .app-content {
+    @apply flex-1 space-y-8 p-6 sm:p-8 lg:p-10;
+  }
 }
 
 @layer utilities {

@@ -1,15 +1,27 @@
 import type { AppProps } from 'next/app';
-import { Inter } from 'next/font/google';
+import type { ReactNode } from 'react';
+import { Be_Vietnam_Pro } from 'next/font/google';
 import '../globals.css';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ['vietnamese', 'latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-sans',
+});
 
-export default function App({ Component, pageProps }: AppProps) {
+type AppPropsWithLayout = AppProps & {
+  Component: AppProps['Component'] & {
+    getLayout?: (page: ReactNode) => ReactNode;
+  };
+};
+
+export default function App({ Component, pageProps }: AppPropsWithLayout) {
+  const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
   return (
-    <div className={inter.variable}>
+    <div className={`${beVietnamPro.variable} min-h-screen font-sans antialiased`}>
       <AuthProvider>
-        <Component {...pageProps} />
+        {getLayout(<Component {...pageProps} />)}
       </AuthProvider>
     </div>
   );

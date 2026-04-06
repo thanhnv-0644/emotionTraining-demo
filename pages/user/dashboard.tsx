@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { api } from '@/lib/api';
+import { api, BASE_URL } from '@/lib/api';
+import UserLayout from '@/components/UserLayout';
+import AppPageHeader from '@/components/AppPageHeader';
 
 interface CourseResponse {
   id: string;
@@ -16,8 +18,9 @@ interface CourseResponse {
 }
 
 interface ProgressResponse {
+  id: string;
   lessonId: string;
-  lessonTitle: string;
+  lessonTitle: string | null;
   score: number | null;
   completedAt: string | null;
   attemptNumber: number;
@@ -71,21 +74,21 @@ export default function Dashboard() {
 
   return (
     <>
-      <header className="h-16 flex items-center justify-between px-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 sticky top-0 z-10">
-        <div className="flex items-center gap-4 flex-1">
+      <AppPageHeader>
+        <div className="flex flex-1 items-center gap-4">
           <div className="relative w-full max-w-md">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-            <input type="text" placeholder="Tìm kiếm khoá học..." className="w-full pl-10 pr-4 py-2 rounded-lg border-none bg-slate-100 dark:bg-slate-800 focus:ring-2 focus:ring-primary text-sm" />
+            <input type="text" placeholder="Tìm kiếm khoá học..." className="w-full rounded-xl border border-transparent bg-slate-100 py-2 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary/30 focus:ring-2 focus:ring-primary/20 dark:bg-slate-800/80 dark:text-slate-100" />
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-            <span className="material-symbols-outlined">notifications</span>
+        <div className="flex items-center gap-2">
+          <button type="button" className="rounded-xl bg-slate-100 p-2.5 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700">
+            <span className="material-symbols-outlined text-[22px]">notifications</span>
           </button>
         </div>
-      </header>
+      </AppPageHeader>
 
-      <div className="p-8 space-y-8">
+      <div className="app-content">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-black tracking-tight">
@@ -136,7 +139,7 @@ export default function Dashboard() {
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold">Tiếp tục học</h3>
-              <Link href="/courses" className="text-primary text-sm font-semibold hover:underline">Xem tất cả</Link>
+              <Link href="/user/courses" className="text-primary text-sm font-semibold hover:underline">Xem tất cả</Link>
             </div>
 
             {loading ? (
@@ -145,7 +148,7 @@ export default function Dashboard() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div className="flex flex-col sm:flex-row">
                   <div className="w-full sm:w-48 h-48 sm:h-auto relative bg-slate-100 dark:bg-slate-800">
-                    <div className="absolute inset-0 bg-cover bg-center bg-slate-200 dark:bg-slate-700" style={continueLesson.image ? { backgroundImage: `url('http://localhost:8080${continueLesson.image}')` } : {}}></div>
+                    <div className="absolute inset-0 bg-cover bg-center bg-slate-200 dark:bg-slate-700" style={continueLesson.image ? { backgroundImage: `url('${BASE_URL}${continueLesson.image}')` } : {}}></div>
                     <div className="absolute inset-0 bg-black/20"></div>
                     <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold capitalize">{continueLesson.category}</div>
                   </div>
@@ -159,7 +162,7 @@ export default function Dashboard() {
                         <span className="material-symbols-outlined text-[16px]">menu_book</span>
                         {continueLesson.lessonCount} bài học
                       </span>
-                      <Link href={`/courses/${continueLesson.id}`} className="ml-auto bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors">
+                      <Link href={`/user/courses/${continueLesson.id}`} className="ml-auto bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors">
                         Tiếp tục
                       </Link>
                     </div>
@@ -170,7 +173,7 @@ export default function Dashboard() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-center">
                 <span className="material-symbols-outlined text-4xl text-slate-300 block mb-2">school</span>
                 <p className="text-slate-500 text-sm">Bạn chưa enroll khoá học nào.</p>
-                <Link href="/courses" className="mt-4 inline-block text-primary font-semibold text-sm hover:underline">Khám phá khoá học</Link>
+                <Link href="/user/courses" className="mt-4 inline-block text-primary font-semibold text-sm hover:underline">Khám phá khoá học</Link>
               </div>
             )}
 
@@ -190,7 +193,7 @@ export default function Dashboard() {
                           <span className="material-symbols-outlined">hearing</span>
                         </div>
                         <div>
-                          <h5 className="font-semibold text-sm">{p.lessonTitle}</h5>
+                          <h5 className="font-semibold text-sm">{p.lessonTitle ?? `Bài học ${p.lessonId.slice(0, 6)}`}</h5>
                           <p className="text-xs text-slate-500">{p.completedAt ? new Date(p.completedAt).toLocaleDateString('vi-VN') : 'Chưa hoàn thành'}</p>
                         </div>
                       </div>
@@ -210,7 +213,7 @@ export default function Dashboard() {
           {/* Emotion Mastery */}
           <div className="space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
-              <h3 className="text-lg font-bold mb-4">Emotion Mastery</h3>
+              <h3 className="text-lg font-bold mb-4">Mức độ cảm xúc</h3>
               {loading ? (
                 <div className="space-y-3">{[1,2,3,4,5,6].map(i => <div key={i} className="h-5 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />)}</div>
               ) : emotionEntries.length === 0 ? (
@@ -230,7 +233,7 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
-              <Link href="/analytics" className="w-full mt-6 py-2 text-sm font-semibold text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors text-center block">
+              <Link href="/user/analytics" className="w-full mt-6 py-2 text-sm font-semibold text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors text-center block">
                 Xem chi tiết
               </Link>
             </div>
@@ -254,3 +257,5 @@ export default function Dashboard() {
     </>
   );
 }
+
+Dashboard.getLayout = (page: ReactNode) => <UserLayout>{page}</UserLayout>;

@@ -1,19 +1,12 @@
-import type { GetServerSideProps } from 'next';
+import { ReactNode } from 'react';
+import { useRouter } from 'next/router';
 import LessonManagement from '@/components/LessonManagement';
+import AdminLayout from '@/components/AdminLayout';
 
-interface Props {
-  courseId: string;
-}
-
-export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
-  const { courseId } = context.params || {};
-  return {
-    props: {
-      courseId: typeof courseId === 'string' ? courseId : '',
-    },
-  };
-};
-
-export default function CourseLessonsPage({ courseId }: Props) {
+export default function CourseLessonsPage() {
+  const { query } = useRouter();
+  const courseId = typeof query.courseId === 'string' ? query.courseId : '';
   return <LessonManagement courseId={courseId} />;
 }
+
+CourseLessonsPage.getLayout = (page: ReactNode) => <AdminLayout>{page}</AdminLayout>;

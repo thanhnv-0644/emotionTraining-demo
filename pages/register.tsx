@@ -41,10 +41,10 @@ export default function Register() {
           <h2 className="text-xl font-bold tracking-tight text-white">ETES</h2>
         </div>
         <div className="relative z-10 flex flex-col gap-6">
-          <h1 className="text-5xl font-extrabold leading-tight text-white">Master your emotional intelligence.</h1>
-          <p className="text-lg text-white/80 max-w-md">Join a community of professionals using advanced evaluation tools to understand and improve emotional responses.</p>
+          <h1 className="text-5xl font-extrabold leading-tight text-white">Làm chủ trí tuệ cảm xúc của bạn.</h1>
+          <p className="text-lg text-white/80 max-w-md">Tham gia cộng đồng chuyên gia sử dụng công cụ đánh giá tiên tiến để hiểu và cải thiện khả năng nhận diện cảm xúc.</p>
           <div className="flex flex-col gap-4 mt-8">
-            {['Professional assessment frameworks', 'Real-time emotional tracking data', 'Customized training modules'].map(item => (
+            {['Khung đánh giá chuyên nghiệp', 'Dữ liệu theo dõi cảm xúc thời gian thực', 'Module luyện tập cá nhân hoá'].map(item => (
               <div key={item} className="flex items-center gap-3 text-white/90">
                 <span className="material-symbols-outlined text-white">check_circle</span>
                 <span className="text-sm font-medium">{item}</span>
@@ -52,7 +52,7 @@ export default function Register() {
             ))}
           </div>
         </div>
-        <div className="relative z-10 text-white/60 text-sm">© 2024 Emotion Training & Evaluation System.</div>
+        <div className="relative z-10 text-white/60 text-sm">© 2024 Hệ thống Luyện tập & Đánh giá Cảm xúc.</div>
       </div>
 
       <div className="flex w-full flex-col items-center justify-center px-6 py-12 lg:w-1/2 lg:px-20">

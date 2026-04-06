@@ -13,8 +13,17 @@ import com.emotionapp.backend.dto.response.AudioClipResponse;
 import com.emotionapp.backend.dto.response.CourseResponse;
 import com.emotionapp.backend.dto.response.EnrollmentResponse;
 import com.emotionapp.backend.dto.response.LessonResponse;
+import com.emotionapp.backend.dto.response.PaymentResponse;
+import com.emotionapp.backend.dto.response.ProgressResponse;
+import com.emotionapp.backend.dto.response.ReviewResponse;
 import com.emotionapp.backend.dto.response.UserResponse;
 import com.emotionapp.backend.dto.response.AdminAnalyticsResponse;
+import com.emotionapp.backend.entity.Payment;
+import com.emotionapp.backend.entity.Review;
+import com.emotionapp.backend.entity.UserProgress;
+import com.emotionapp.backend.repository.PaymentRepository;
+import com.emotionapp.backend.repository.ReviewRepository;
+import com.emotionapp.backend.repository.UserProgressRepository;
 import com.emotionapp.backend.service.AnalyticsService;
 import com.emotionapp.backend.service.AudioClipService;
 import com.emotionapp.backend.service.EnrollmentService;
@@ -52,6 +61,9 @@ public class AdminController {
     private final EnrollmentService enrollmentService;
     private final FileStorageService fileStorageService;
     private final AnalyticsService analyticsService;
+    private final PaymentRepository paymentRepository;
+    private final ReviewRepository reviewRepository;
+    private final UserProgressRepository userProgressRepository;
 
     // ── Courses ──────────────────────────────────────────────────────────────
 
@@ -196,5 +208,89 @@ public class AdminController {
         LocalDateTime fromDate = from != null ? LocalDateTime.parse(from + "T00:00:00") : null;
         LocalDateTime toDate   = to   != null ? LocalDateTime.parse(to   + "T23:59:59") : null;
         return ResponseEntity.ok(ApiResponse.success(analyticsService.getAdminAnalytics(fromDate, toDate)));
+    }
+
+    // ── Payments ──────────────────────────────────────────────────────────────
+
+    @GetMapping("/payments")
+    public ResponseEntity<ApiResponse<List<PaymentResponse>>> getAllPayments(
+            @RequestParam(required = false) String status) {
+        List<Payment> payments = status != null
+                ? paymentRepository.findAll().stream()
+                    .filter(p -> p.getStatus().name().equalsIgnoreCase(status))
+                    .toList()
+                : paymentRepository.findAll();
+        List<PaymentResponse> result = payments.stream().map(p -> PaymentResponse.builder()
+                .id(p.getId())
+                .courseId(p.getCourse().getId())
+                .courseTitle(p.getCourse().getTitle())
+                .amount(p.getAmount())
+                .currency(p.getCurrency())
+                .method(p.getMethod() != null ? p.getMethod().name() : null)
+                .status(p.getStatus().name())
+                .transactionId(p.getTransactionId())
+                .failureReason(p.getFailureReason())
+                .paidAt(p.getPaidAt())
+                .expiredAt(p.getExpiredAt())
+                .createdAt(p.getCreatedAt())
+                .build()).toList();
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    // ── User Progress ─────────────────────────────────────────────────────────
+
+    @GetMapping("/progress")
+    public ResponseEntity<ApiResponse<List<ProgressResponse>>> getAllProgress(
+            @RequestParam(required = false) String userId) {
+        List<UserProgress> progresses = userId != null
+                ? userProgressRepository.findByUserId(userId)
+                : userProgressRepository.findByCompletedAtIsNotNull();
+        List<ProgressResponse> result = progresses.stream().map(p -> ProgressResponse.builder()
+                .id(p.getId())
+                .userId(p.getUser().getId())
+                .userName(p.getUser().getName())
+                .lessonId(p.getLesson().getId())
+                .lessonTitle(p.getLesson().getTitle())
+                .attemptNumber(p.getAttemptNumber())
+                .score(p.getScore())
+                .completedAt(p.getCompletedAt())
+                .answers(p.getAnswers())
+                .createdAt(p.getCreatedAt())
+                .build()).toList();
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    // ── Reviews ───────────────────────────────────────────────────────────────
+
+    @GetMapping("/reviews")
+    public ResponseEntity<ApiResponse<List<ReviewResponse>>> getAllReviews(
+            @RequestParam(required = false) String courseId) {
+        List<Review> reviews = courseId != null
+                ? reviewRepository.findByCourseIdAndDeletedAtIsNullOrderByCreatedAtDesc(courseId)
+                : reviewRepository.findAll().stream()
+                    .filter(r -> r.getDeletedAt() == null)
+                    .toList();
+        List<ReviewResponse> result = reviews.stream().map(r -> ReviewResponse.builder()
+                .id(r.getId())
+                .userId(r.getUser().getId())
+                .userName(r.getUser().getName())
+                .courseId(r.getCourse().getId())
+                .courseTitle(r.getCourse().getTitle())
+                .rating(r.getRating())
+                .comment(r.getComment())
+                .createdAt(r.getCreatedAt())
+                .updatedAt(r.getUpdatedAt())
+                .build()).toList();
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @DeleteMapping("/reviews/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable String id) {
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new com.emotionapp.backend.exception.AppException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Review not found"));
+        review.setDeletedAt(java.time.LocalDateTime.now());
+        reviewRepository.save(review);
+        return ResponseEntity.ok(ApiResponse.success("Review deleted", null));
     }
 }

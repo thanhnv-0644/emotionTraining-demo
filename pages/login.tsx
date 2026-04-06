@@ -37,13 +37,13 @@ export default function Login() {
           </div>
           <div className="space-y-6">
             <h1 className="text-white text-5xl font-extrabold leading-tight">
-              Master your <span className="text-white/80">emotional</span> landscape.
+              Làm chủ <span className="text-white/80">cảm xúc</span> của bạn.
             </h1>
             <p className="text-indigo-100 text-xl leading-relaxed font-light italic">
-              "Emotional intelligence is the ability to sense, understand, and effectively apply the power and acumen of emotions as a source of human energy, information, connection, and influence."
+              "Trí tuệ cảm xúc là khả năng cảm nhận, hiểu và ứng dụng hiệu quả sức mạnh của cảm xúc như nguồn năng lượng, thông tin, kết nối và ảnh hưởng."
             </p>
             <div className="flex items-center gap-4 pt-6">
-              <span className="text-indigo-100 text-sm font-medium">Joined by 10,000+ professionals</span>
+              <span className="text-indigo-100 text-sm font-medium">Hơn 10.000 chuyên gia đã tham gia</span>
             </div>
           </div>
         </div>
@@ -52,8 +52,8 @@ export default function Login() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">Welcome Back</h2>
-            <p className="mt-2 text-slate-600 dark:text-slate-400">Please enter your details to sign in.</p>
+            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">Chào mừng trở lại</h2>
+            <p className="mt-2 text-slate-600 dark:text-slate-400">Nhập email và mật khẩu để đăng nhập.</p>
           </div>
 
           {error && (

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
+import AppPageHeader from '@/components/AppPageHeader';
 
 interface Lesson {
   id: string;
@@ -37,19 +38,19 @@ export default function CourseLesson({
       case 'completed':
         return (
           <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400">
-            COMPLETED
+            Đã xong
           </span>
         );
       case 'in-progress':
         return (
           <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-primary/20 text-primary">
-            IN PROGRESS
+            Đang học
           </span>
         );
       case 'locked':
         return (
           <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-200 dark:bg-slate-800 text-slate-500">
-            LOCKED
+            Khoá
           </span>
         );
     }
@@ -79,37 +80,36 @@ export default function CourseLesson({
 
   return (
     <main className="min-h-screen overflow-y-auto">
-        {/* Header */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 px-8 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <Link className="hover:text-primary" href="/courses">
-              My Courses
+        <AppPageHeader>
+          <div className="flex min-w-0 items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <Link className="shrink-0 hover:text-primary" href="/user/courses">
+              Khoá học
             </Link>
             <span className="material-symbols-outlined text-xs">chevron_right</span>
-            <span className="text-slate-900 dark:text-slate-100 font-medium">{courseName}</span>
+            <span className="truncate font-medium text-slate-900 dark:text-slate-100">{courseName}</span>
           </div>
-          <button className="flex items-center gap-2 px-6 py-2 bg-primary text-white text-sm font-semibold rounded-lg shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+          <button type="button" className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-md shadow-primary/25 transition-all hover:bg-primary/90">
             <span className="material-symbols-outlined text-sm">play_circle</span>
-            Resume Learning
+            Tiếp tục học
           </button>
-        </header>
+        </AppPageHeader>
 
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="mx-auto max-w-6xl p-6 sm:p-8 lg:p-10">
           {/* Course Hero */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-primary/40 p-10 text-white mb-8 shadow-2xl">
             <div className="relative z-10 max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold mb-6">
                 <span className="material-symbols-outlined text-sm text-primary">verified</span>
-                Certification Track
+                Lộ trình chứng chỉ
               </div>
               <h2 className="text-4xl font-extrabold tracking-tight mb-4">{courseName}</h2>
               <p className="text-slate-300 text-lg leading-relaxed mb-8">
-                Develop the ability to identify emotions and micro-expressions. This advanced training uses high-speed video analysis and real-world scenarios.
+                Rèn luyện khả năng nhận diện cảm xúc và biểu cảm nhỏ qua các tình huống thực tế và phân tích âm thanh.
               </p>
               <div className="flex items-center gap-6">
                 <div className="flex-1 max-w-xs">
                   <div className="flex justify-between items-end mb-2">
-                    <span className="text-sm font-medium text-slate-300">Overall Progress</span>
+                    <span className="text-sm font-medium text-slate-300">Tiến độ</span>
                     <span className="text-xl font-bold">{progress}%</span>
                   </div>
                   <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
@@ -120,8 +120,8 @@ export default function CourseLesson({
                   </div>
                 </div>
                 <div className="text-slate-400 text-sm">
-                  <span className="text-white font-bold">{completedLessons}</span> of{' '}
-                  <span className="text-white font-bold">{totalLessons}</span> Lessons Completed
+                  <span className="text-white font-bold">{completedLessons}</span> /{' '}
+                  <span className="text-white font-bold">{totalLessons}</span> bài đã hoàn thành
                 </div>
               </div>
             </div>
@@ -130,7 +130,7 @@ export default function CourseLesson({
           {/* Lessons Content */}
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Course Curriculum</h3>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Chương trình bài học</h3>
             </div>
 
             {/* Lesson Cards */}
@@ -152,7 +152,7 @@ export default function CourseLesson({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                        Lesson {String(lesson.number).padStart(2, '0')}
+                        Bài {String(lesson.number).padStart(2, '0')}
                       </span>
                       {getStatusBadge(lesson.status)}
                     </div>
@@ -166,17 +166,17 @@ export default function CourseLesson({
                       </div>
                       {lesson.status === 'locked' ? (
                         <div className="flex items-center gap-1 text-slate-400 italic">
-                          Complete previous lesson to unlock
+                          Hoàn thành bài trước để mở khoá
                         </div>
                       ) : lesson.status === 'completed' && lesson.score ? (
                         <div className="flex items-center gap-1 text-primary dark:text-primary/80 font-semibold">
                           <span className="material-symbols-outlined text-sm">analytics</span>
-                          Score: {lesson.score}%
+                          Điểm: {lesson.score}%
                         </div>
                       ) : (
                         <div className="flex items-center gap-1">
                           <span className="material-symbols-outlined text-sm">hotel_class</span>
-                          {lesson.level} Level
+                          Cấp {lesson.level}
                         </div>
                       )}
                     </div>
@@ -184,7 +184,7 @@ export default function CourseLesson({
                   <button
                     onClick={() => {
                       if (lesson.status !== 'locked') {
-                        router.push(`/courses/${courseId}/lessons/${lesson.id}`);
+                        router.push(`/user/courses/${courseId}/lessons/${lesson.id}`);
                       }
                     }}
                     disabled={lesson.status === 'locked'}
@@ -196,7 +196,7 @@ export default function CourseLesson({
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
-                    {lesson.status === 'locked' ? 'Locked' : lesson.status === 'completed' ? 'Review' : 'Start Lesson'}
+                    {lesson.status === 'locked' ? 'Đã khoá' : lesson.status === 'completed' ? 'Xem lại' : 'Bắt đầu'}
                   </button>
                 </div>
               ))}
