@@ -14,7 +14,9 @@ import java.time.LocalDateTime;
 public class ProgressResponse {
     private String id;
     private String userId;
+    private String userName;
     private String lessonId;
+    private String lessonTitle;
     private Integer attemptNumber;
     private Integer score;
     private LocalDateTime completedAt;
