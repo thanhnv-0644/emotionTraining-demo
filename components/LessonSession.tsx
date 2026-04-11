@@ -63,7 +63,7 @@ export default function LessonSession({
   const [answers, setAnswers] = useState<Array<{ audioClipId: string; selectedEmotion: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentClip = audioClips[currentClipIndex];
+  const currentClip = audioClips[currentClipIndex] ?? null;
   const isLastClip = currentClipIndex === audioClips.length - 1;
 
   // Reset audio when clip changes
@@ -96,13 +96,8 @@ export default function LessonSession({
 
     if (isLastClip) {
       setIsSubmitting(true);
-      try {
-        await api.post(`/api/lessons/${lessonId}/progress`, { answers: newAnswers });
-      } catch {
-        // proceed anyway
-      }
 
-      // Build result data for the result page
+      // Build result data
       const resultAnswers = audioClips.map((clip, i) => {
         const ans = newAnswers[i];
         const isCorrect = ans?.selectedEmotion === clip.targetEmotion;
@@ -116,11 +111,20 @@ export default function LessonSession({
       const correctCount = resultAnswers.filter(a => a.status === 'correct').length;
       const score = audioClips.length > 0 ? Math.round((correctCount / audioClips.length) * 100) : 0;
 
+      let xpEarned = 0;
+      try {
+        const res = await api.post<{ xpEarned?: number }>(`/api/lessons/${lessonId}/progress`, { answers: newAnswers });
+        xpEarned = res?.xpEarned ?? Math.round(score / 10) * audioClips.length;
+      } catch {
+        xpEarned = Math.round(score / 10) * audioClips.length;
+      }
+
       sessionStorage.setItem('lessonResult', JSON.stringify({
         lessonTitle,
         score,
         totalQuestions: audioClips.length,
         correctAnswers: correctCount,
+        xpEarned,
         answers: resultAnswers,
       }));
 
@@ -140,6 +144,22 @@ export default function LessonSession({
   };
 
   const progressPercent = duration > 0 ? (playbackTime / duration) * 100 : 0;
+
+  if (audioClips.length === 0) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
+        <span className="material-symbols-outlined text-6xl text-slate-300">mic_off</span>
+        <h2 className="text-xl font-bold text-slate-700 dark:text-slate-300">Bài học chưa có nội dung</h2>
+        <p className="text-slate-500 text-sm">Bài học này chưa có audio clip nào. Vui lòng thử lại sau.</p>
+        <button
+          onClick={() => router.push(`/user/courses/${courseId}`)}
+          className="mt-2 px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors"
+        >
+          Về khoá học
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
@@ -183,7 +203,7 @@ export default function LessonSession({
                 <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                   Clip {currentClipIndex + 1} / {audioClips.length}
                 </h2>
-                <p className="text-sm text-slate-500 mt-1">{currentClip.subject}</p>
+                <p className="text-sm text-slate-500 mt-1">{currentClip?.subject}</p>
               </div>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -231,7 +251,7 @@ export default function LessonSession({
             <div className="w-full max-w-md">
               <div className="flex justify-between text-xs text-slate-500 mb-2 font-medium">
                 <span>{String(Math.floor(playbackTime / 60)).padStart(2, "0")}:{String(playbackTime % 60).padStart(2, "0")}</span>
-                <span>{currentClip.duration}</span>
+                <span>{currentClip?.duration}</span>
               </div>
               <div
                 className="relative h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full cursor-pointer"

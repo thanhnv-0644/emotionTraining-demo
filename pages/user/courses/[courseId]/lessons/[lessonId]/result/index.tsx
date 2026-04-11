@@ -14,6 +14,7 @@ interface ResultData {
   score: number;
   totalQuestions: number;
   correctAnswers: number;
+  xpEarned: number;
   answers: AnswerItem[];
 }
 
@@ -52,6 +53,7 @@ export default function LessonResultPage() {
       score={result.score}
       totalQuestions={result.totalQuestions}
       correctAnswers={result.correctAnswers}
+      xpEarned={result.xpEarned ?? 0}
       answers={result.answers}
     />
   );

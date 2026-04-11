@@ -1,8 +1,14 @@
 import Link from 'next/link';
-import { useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode, useMemo } from 'react';
 import { api, BASE_URL } from '@/lib/api';
 import UserLayout from '@/components/UserLayout';
 import AppPageHeader from '@/components/AppPageHeader';
+
+const LEVEL_CONFIG: Record<string, { label: string; className: string }> = {
+  easy: { label: 'Dễ', className: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' },
+  medium: { label: 'Trung bình', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400' },
+  advanced: { label: 'Nâng cao', className: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' },
+};
 
 interface CourseResponse {
   id: string;
@@ -17,27 +23,60 @@ interface CourseResponse {
   status: string;
 }
 
+interface RatingSummary {
+  avg: number;
+  count: number;
+}
+
 export default function Courses() {
   const [enrolledCourses, setEnrolledCourses] = useState<CourseResponse[]>([]);
   const [allCourses, setAllCourses] = useState<CourseResponse[]>([]);
+  const [ratings, setRatings] = useState<Record<string, RatingSummary>>({});
   const [tab, setTab] = useState<'enrolled' | 'explore'>('enrolled');
   const [loading, setLoading] = useState(true);
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     Promise.all([
       api.get<CourseResponse[]>('/api/courses/my'),
       api.get<CourseResponse[]>('/api/courses'),
     ]).then(([enrolled, all]) => {
-      setEnrolledCourses(enrolled ?? []);
-      setAllCourses(all ?? []);
+      const e = enrolled ?? [];
+      const a = all ?? [];
+      setEnrolledCourses(e);
+      setAllCourses(a);
+
+      // Fetch ratings for all courses in parallel
+      const ids = [...new Set([...e.map(c => c.id), ...a.map(c => c.id)])];
+      Promise.all(
+        ids.map(id =>
+          api.get<{ rating: number }[]>(`/api/courses/${id}/reviews`)
+            .then(reviews => ({ id, reviews: reviews ?? [] }))
+            .catch(() => ({ id, reviews: [] }))
+        )
+      ).then(results => {
+        const map: Record<string, RatingSummary> = {};
+        for (const { id, reviews } of results) {
+          if (reviews.length > 0) {
+            const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+            map[id] = { avg: Math.round(avg * 10) / 10, count: reviews.length };
+          }
+        }
+        setRatings(map);
+      });
     }).catch(() => setError('Không thể tải danh sách khoá học.')).finally(() => setLoading(false));
   }, []);
 
   const enrolledIds = new Set(enrolledCourses.map(c => c.id));
   const exploreCourses = allCourses.filter(c => !enrolledIds.has(c.id));
-  const displayCourses = tab === 'enrolled' ? enrolledCourses : exploreCourses;
+  const baseCourses = tab === 'enrolled' ? enrolledCourses : exploreCourses;
+  const displayCourses = useMemo(() => {
+    if (!search.trim()) return baseCourses;
+    const q = search.toLowerCase();
+    return baseCourses.filter(c => c.title.toLowerCase().includes(q) || c.description.toLowerCase().includes(q));
+  }, [baseCourses, search]);
 
   async function handleEnroll(courseId: string) {
     setEnrollingId(courseId);
@@ -68,15 +107,26 @@ export default function Courses() {
           </div>
         )}
 
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[20px]">search</span>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Tìm kiếm khoá học..."
+            className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          />
+        </div>
+
         <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800">
           <button
-            onClick={() => setTab('enrolled')}
+            onClick={() => { setTab('enrolled'); setSearch(''); }}
             className={`px-4 py-3 text-sm font-bold transition-colors ${tab === 'enrolled' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'}`}
           >
             Đang học ({enrolledCourses.length})
           </button>
           <button
-            onClick={() => setTab('explore')}
+            onClick={() => { setTab('explore'); setSearch(''); }}
             className={`px-4 py-3 text-sm font-bold transition-colors ${tab === 'explore' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'}`}
           >
             Khám phá ({exploreCourses.length})
@@ -91,11 +141,15 @@ export default function Courses() {
           </div>
         ) : displayCourses.length === 0 ? (
           <div className="text-center py-16">
-            <span className="material-symbols-outlined text-5xl text-slate-300 block mb-3">school</span>
+            <span className="material-symbols-outlined text-5xl text-slate-300 block mb-3">
+              {search ? 'search_off' : 'school'}
+            </span>
             <p className="text-slate-500">
-              {tab === 'enrolled' ? 'Bạn chưa đăng ký khoá học nào.' : 'Không có khoá học mới.'}
+              {search
+                ? `Không tìm thấy khoá học cho "${search}".`
+                : tab === 'enrolled' ? 'Bạn chưa đăng ký khoá học nào.' : 'Không có khoá học mới.'}
             </p>
-            {tab === 'enrolled' && (
+            {!search && tab === 'enrolled' && (
               <button onClick={() => setTab('explore')} className="mt-4 text-primary font-semibold text-sm hover:underline">
                 Khám phá khoá học
               </button>
@@ -117,16 +171,16 @@ export default function Courses() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold shadow-sm capitalize">
-                    {course.category}
+                  <div className={`absolute top-3 right-3 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold shadow-sm ${LEVEL_CONFIG[course.category]?.className ?? 'bg-white/90 dark:bg-slate-900/90 text-slate-700'}`}>
+                    {LEVEL_CONFIG[course.category]?.label ?? course.category}
                   </div>
-                  {course.isFree ? (
+                  {(course.isFree || !course.price) ? (
                     <div className="absolute top-3 left-3 bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold">
                       Miễn phí
                     </div>
                   ) : (
                     <div className="absolute top-3 left-3 bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">
-                      {(course.price ?? 0).toLocaleString('vi-VN')}đ
+                      {course.price.toLocaleString('vi-VN')}đ
                     </div>
                   )}
                 </div>
@@ -135,14 +189,23 @@ export default function Courses() {
                     {course.title}
                   </h3>
                   <p className="text-sm text-slate-500 line-clamp-2 mb-4 flex-1">{course.description}</p>
-                  <div className="flex items-center gap-4 text-xs text-slate-500 mb-4">
+                  <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
                     <span className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-[16px]">menu_book</span>
                       {course.lessonCount} bài học
                     </span>
-                    <span className="capitalize px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold uppercase tracking-wider">
-                      {course.category}
-                    </span>
+                    {ratings[course.id] ? (
+                      <span className="flex items-center gap-1 font-semibold">
+                        <span className="material-symbols-outlined text-[16px] text-amber-400">star</span>
+                        <span className="text-slate-700 dark:text-slate-300">{ratings[course.id].avg.toFixed(1)}</span>
+                        <span className="text-slate-400">({ratings[course.id].count})</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-slate-300 dark:text-slate-600">
+                        <span className="material-symbols-outlined text-[16px]">star</span>
+                        Chưa có
+                      </span>
+                    )}
                   </div>
 
                   {tab === 'enrolled' ? (
