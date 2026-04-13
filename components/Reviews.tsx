@@ -44,11 +44,22 @@ export default function Reviews({ courseId }: ReviewsProps) {
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // New review form
   const [showForm, setShowForm] = useState(false);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editRating, setEditRating] = useState(5);
+  const [editComment, setEditComment] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,17 +72,17 @@ export default function Reviews({ courseId }: ReviewsProps) {
     }).catch(() => {}).finally(() => setLoading(false));
   }, [courseId]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
-    if (!comment.trim()) return;
+    if (!newComment.trim()) return;
     setSubmitting(true);
     setSubmitError("");
     try {
-      await api.post(`/api/courses/${courseId}/reviews`, { rating, comment: comment.trim() });
+      await api.post(`/api/courses/${courseId}/reviews`, { rating: newRating, comment: newComment.trim() });
       const data = await api.get<ReviewItem[]>(`/api/courses/${courseId}/reviews`);
       setReviews(data ?? []);
-      setComment("");
-      setRating(5);
+      setNewComment("");
+      setNewRating(5);
       setShowForm(false);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Gửi nhận xét thất bại.");
@@ -80,10 +91,40 @@ export default function Reviews({ courseId }: ReviewsProps) {
     }
   }
 
+  function startEdit(review: ReviewItem) {
+    setEditingId(review.id);
+    setEditRating(review.rating);
+    setEditComment(review.comment);
+    setEditError("");
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditError("");
+  }
+
+  async function handleEdit(e: { preventDefault(): void }) {
+    e.preventDefault();
+    if (!editComment.trim()) return;
+    setEditSubmitting(true);
+    setEditError("");
+    try {
+      await api.put(`/api/courses/${courseId}/reviews`, { rating: editRating, comment: editComment.trim() });
+      const data = await api.get<ReviewItem[]>(`/api/courses/${courseId}/reviews`);
+      setReviews(data ?? []);
+      setEditingId(null);
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : "Cập nhật thất bại.");
+    } finally {
+      setEditSubmitting(false);
+    }
+  }
+
   async function handleDelete(reviewId: string) {
+    if (!window.confirm('Bạn có chắc muốn xoá nhận xét này không?')) return;
     setDeletingId(reviewId);
     try {
-      await api.delete(`/api/courses/${courseId}/reviews/${reviewId}`);
+      await api.delete(`/api/courses/${courseId}/reviews`);
       setReviews(prev => prev.filter(r => r.id !== reviewId));
     } catch {
       // ignore
@@ -112,13 +153,11 @@ export default function Reviews({ courseId }: ReviewsProps) {
             <h3 className="text-lg font-bold mb-3">Đánh giá khoá học</h3>
             {reviews.length > 0 ? (
               <div className="flex items-start gap-6">
-                {/* Big score */}
                 <div className="text-center">
                   <div className="text-5xl font-black text-slate-900 dark:text-slate-100 leading-none">{avgRating.toFixed(1)}</div>
                   <StarRating value={Math.round(avgRating)} />
                   <p className="text-xs text-slate-500 mt-1">{reviews.length} đánh giá</p>
                 </div>
-                {/* Bar chart */}
                 <div className="flex-1 space-y-1.5 min-w-0">
                   {ratingCounts.map(({ star, count }) => (
                     <div key={star} className="flex items-center gap-2 text-xs">
@@ -151,19 +190,19 @@ export default function Reviews({ courseId }: ReviewsProps) {
         </div>
       </div>
 
-      {/* Review Form */}
+      {/* New Review Form */}
       {showForm && (
         <form onSubmit={handleSubmit} className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
           <h4 className="font-bold text-sm mb-4">Nhận xét của bạn</h4>
           <div className="mb-4">
             <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Xếp hạng</label>
-            <StarRating value={rating} onChange={setRating} />
+            <StarRating value={newRating} onChange={setNewRating} />
           </div>
           <div className="mb-4">
             <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Nội dung</label>
             <textarea
-              value={comment}
-              onChange={e => setComment(e.target.value)}
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
               placeholder="Chia sẻ trải nghiệm của bạn về khoá học này..."
               className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
               rows={4}
@@ -173,14 +212,14 @@ export default function Reviews({ courseId }: ReviewsProps) {
           <div className="flex gap-2">
             <button
               type="submit"
-              disabled={submitting || !comment.trim()}
+              disabled={submitting || !newComment.trim()}
               className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Đang gửi...' : 'Gửi nhận xét'}
             </button>
             <button
               type="button"
-              onClick={() => { setShowForm(false); setComment(''); setRating(5); setSubmitError(''); }}
+              onClick={() => { setShowForm(false); setNewComment(''); setNewRating(5); setSubmitError(''); }}
               className="px-5 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
             >
               Huỷ
@@ -206,35 +245,87 @@ export default function Reviews({ courseId }: ReviewsProps) {
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {reviews.map(review => (
               <div key={review.id} className="py-5 first:pt-0 last:pb-0">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary font-bold text-sm uppercase">
-                      {review.userName?.[0] ?? '?'}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{review.userName}</p>
-                        <StarRating value={review.rating} />
-                        <span className="text-xs text-slate-400">
-                          {new Date(review.createdAt).toLocaleDateString('vi-VN')}
-                        </span>
+                {editingId === review.id ? (
+                  /* ── Inline edit form ── */
+                  <form onSubmit={handleEdit} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary font-bold text-sm uppercase">
+                        {review.userName?.[0] ?? '?'}
                       </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">{review.comment}</p>
+                      <p className="font-semibold text-sm">{review.userName}</p>
                     </div>
+                    <div className="mb-3">
+                      <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Xếp hạng</label>
+                      <StarRating value={editRating} onChange={setEditRating} />
+                    </div>
+                    <div className="mb-3">
+                      <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Nội dung</label>
+                      <textarea
+                        value={editComment}
+                        onChange={e => setEditComment(e.target.value)}
+                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+                        rows={3}
+                      />
+                    </div>
+                    {editError && <p className="text-sm text-red-500 mb-2">{editError}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={editSubmitting || !editComment.trim()}
+                        className="px-4 py-1.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {editSubmitting ? 'Đang lưu...' : 'Lưu'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelEdit}
+                        className="px-4 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                      >
+                        Huỷ
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  /* ── Normal review row ── */
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary font-bold text-sm uppercase">
+                        {review.userName?.[0] ?? '?'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{review.userName}</p>
+                          <StarRating value={review.rating} />
+                          <span className="text-xs text-slate-400">
+                            {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">{review.comment}</p>
+                      </div>
+                    </div>
+                    {review.userId === currentUserId && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => startEdit(review)}
+                          className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          title="Sửa nhận xét"
+                        >
+                          <span className="material-symbols-outlined text-base">edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(review.id)}
+                          disabled={deletingId === review.id}
+                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                          title="Xoá nhận xét"
+                        >
+                          <span className="material-symbols-outlined text-base">
+                            {deletingId === review.id ? 'hourglass_empty' : 'delete'}
+                          </span>
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  {review.userId === currentUserId && (
-                    <button
-                      onClick={() => handleDelete(review.id)}
-                      disabled={deletingId === review.id}
-                      className="shrink-0 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
-                      title="Xoá nhận xét"
-                    >
-                      <span className="material-symbols-outlined text-base">
-                        {deletingId === review.id ? 'hourglass_empty' : 'delete'}
-                      </span>
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
             ))}
           </div>

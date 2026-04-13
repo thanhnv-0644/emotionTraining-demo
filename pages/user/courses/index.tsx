@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useEffect, useState, ReactNode, useMemo } from 'react';
+import { useEffect, useState, ReactNode, useMemo, useRef } from 'react';
 import { api, BASE_URL } from '@/lib/api';
 import UserLayout from '@/components/UserLayout';
 import AppPageHeader from '@/components/AppPageHeader';
@@ -28,6 +28,12 @@ interface RatingSummary {
   count: number;
 }
 
+interface SearchHistory {
+  id: string;
+  keyword: string;
+  createdAt: string;
+}
+
 export default function Courses() {
   const [enrolledCourses, setEnrolledCourses] = useState<CourseResponse[]>([]);
   const [allCourses, setAllCourses] = useState<CourseResponse[]>([]);
@@ -37,6 +43,11 @@ export default function Courses() {
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+
+  // Search history
+  const [history, setHistory] = useState<SearchHistory[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     Promise.all([
@@ -48,7 +59,6 @@ export default function Courses() {
       setEnrolledCourses(e);
       setAllCourses(a);
 
-      // Fetch ratings for all courses in parallel
       const ids = [...new Set([...e.map(c => c.id), ...a.map(c => c.id)])];
       Promise.all(
         ids.map(id =>
@@ -69,6 +79,54 @@ export default function Courses() {
     }).catch(() => setError('Không thể tải danh sách khoá học.')).finally(() => setLoading(false));
   }, []);
 
+  // Load history on mount
+  useEffect(() => {
+    api.get<SearchHistory[]>('/api/search-histories')
+      .then(data => setHistory(data ?? []))
+      .catch(() => {});
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowHistory(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  function applySearch(keyword: string) {
+    setSearch(keyword);
+    setShowHistory(false);
+  }
+
+  function saveToHistory(keyword: string) {
+    const trimmed = keyword.trim();
+    if (!trimmed) return;
+    api.post<SearchHistory[]>('/api/search-histories', { keywords: [trimmed] })
+      .then(data => { if (data) setHistory(data); })
+      .catch(() => {});
+  }
+
+  async function deleteHistory(id: string) {
+    await api.delete(`/api/search-histories/${id}`).catch(() => {});
+    setHistory(prev => prev.filter(h => h.id !== id));
+  }
+
+  async function clearAllHistory() {
+    await api.delete('/api/search-histories').catch(() => {});
+    setHistory([]);
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' && search.trim()) {
+      saveToHistory(search);
+      setShowHistory(false);
+    }
+  }
+
   const enrolledIds = new Set(enrolledCourses.map(c => c.id));
   const exploreCourses = allCourses.filter(c => !enrolledIds.has(c.id));
   const baseCourses = tab === 'enrolled' ? enrolledCourses : exploreCourses;
@@ -77,6 +135,11 @@ export default function Courses() {
     const q = search.toLowerCase();
     return baseCourses.filter(c => c.title.toLowerCase().includes(q) || c.description.toLowerCase().includes(q));
   }, [baseCourses, search]);
+
+  // Filtered history to show (exclude duplicates with current search)
+  const filteredHistory = search.trim()
+    ? history.filter(h => h.keyword.toLowerCase().includes(search.toLowerCase()))
+    : history;
 
   async function handleEnroll(courseId: string) {
     setEnrollingId(courseId);
@@ -107,15 +170,60 @@ export default function Courses() {
           </div>
         )}
 
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[20px]">search</span>
+        {/* Search with history dropdown */}
+        <div ref={searchRef} className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[20px] z-10">search</span>
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
+            onFocus={() => setShowHistory(true)}
+            onKeyDown={handleSearchKeyDown}
             placeholder="Tìm kiếm khoá học..."
-            className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full pl-10 pr-10 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
           />
+          {search && (
+            <button
+              onClick={() => { setSearch(''); setShowHistory(true); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          )}
+
+          {/* History dropdown */}
+          {showHistory && filteredHistory.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tìm kiếm gần đây</span>
+                <button
+                  onClick={clearAllHistory}
+                  className="text-xs font-semibold text-primary hover:underline"
+                >
+                  Xoá tất cả
+                </button>
+              </div>
+              <ul>
+                {filteredHistory.slice(0, 8).map(item => (
+                  <li key={item.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 group">
+                    <span className="material-symbols-outlined text-[18px] text-slate-400 shrink-0">history</span>
+                    <button
+                      className="flex-1 text-left text-sm text-slate-700 dark:text-slate-300 truncate"
+                      onClick={() => applySearch(item.keyword)}
+                    >
+                      {item.keyword}
+                    </button>
+                    <button
+                      onClick={() => deleteHistory(item.id)}
+                      className="shrink-0 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-opacity"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800">

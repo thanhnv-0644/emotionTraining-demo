@@ -11,6 +11,7 @@ export default function UserSidebar() {
     { name: 'Tổng quan', icon: 'home', href: '/user/dashboard' },
     { name: 'Khoá học', icon: 'book_5', href: '/user/courses' },
     { name: 'Phân tích', icon: 'monitoring', href: '/user/analytics' },
+    { name: 'Xếp hạng', icon: 'leaderboard', href: '/user/leaderboard' },
     { name: 'Thành tích', icon: 'emoji_events', href: '/user/achievements' },
     { name: 'Hồ sơ', icon: 'person', href: '/user/profile' },
   ];

@@ -63,8 +63,27 @@ export default function LessonSession({
   const [answers, setAnswers] = useState<Array<{ audioClipId: string; selectedEmotion: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // RAF for smooth progress
+  const rafRef = useRef<number>(0);
+
   const currentClip = audioClips[currentClipIndex] ?? null;
   const isLastClip = currentClipIndex === audioClips.length - 1;
+
+  // Poll currentTime at 60fps for smooth seek bar + waveform sweep
+  useEffect(() => {
+    const tick = () => {
+      if (audioRef.current) {
+        setPlaybackTime(audioRef.current.currentTime);
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    if (isPlaying) {
+      rafRef.current = requestAnimationFrame(tick);
+    } else {
+      cancelAnimationFrame(rafRef.current);
+    }
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [isPlaying]);
 
   // Reset audio when clip changes
   useEffect(() => {
@@ -168,8 +187,7 @@ export default function LessonSession({
         <audio
           ref={audioRef}
           src={currentClip.url}
-          onTimeUpdate={(e) => setPlaybackTime(Math.floor(e.currentTarget.currentTime))}
-          onLoadedMetadata={(e) => setDuration(Math.floor(e.currentTarget.duration))}
+          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
           onEnded={() => setIsPlaying(false)}
         />
       )}
@@ -216,18 +234,45 @@ export default function LessonSession({
 
           {/* Audio Player Section */}
           <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center gap-6">
-            <div className="w-full h-24 flex items-center justify-center gap-1">
-              {[12, 16, 24, 32, 20, 28, 36, 40, 24, 16, 20, 28, 24, 12, 16, 8, 12, 16, 24, 20, 14, 10].map((height, i) => (
+            {/* SoundCloud-style waveform */}
+            {(() => {
+              const BARS = [0.35,0.55,0.75,0.95,0.65,0.85,1.0,0.72,0.5,0.88,0.62,0.92,0.45,0.78,0.85,0.55,0.68,0.95,0.72,0.42,0.82,0.6,0.5,0.92,0.75,0.45,0.65,0.88,0.52,0.78,0.95,0.6,0.42,0.7,0.85,0.58];
+              const BarRow = ({ color }: { color: string }) => (
+                <div className={`absolute inset-0 flex items-end gap-[3px] px-1 ${color}`}>
+                  {BARS.map((h, i) => (
+                    <div key={i} className="rounded-full flex-1 bg-current" style={{ height: `${h * 100}%` }} />
+                  ))}
+                </div>
+              );
+              return (
                 <div
-                  key={i}
-                  className={`rounded-full transition-all ${i < Math.floor((progressPercent / 100) * 22) ? "bg-primary" : "bg-primary/30"}`}
-                  style={{ width: "4px", height: `${height * 2}px` }}
-                />
-              ))}
-            </div>
+                  className="relative w-full h-24 cursor-pointer"
+                  onClick={(e) => {
+                    if (!audioRef.current || !duration) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const t = ((e.clientX - rect.left) / rect.width) * duration;
+                    audioRef.current.currentTime = t;
+                    setPlaybackTime(t);
+                  }}
+                >
+                  <BarRow color="text-primary/25" />
+                  <div
+                    className="absolute inset-0"
+                    style={{ clipPath: `inset(0 ${100 - progressPercent}% 0 0)` }}
+                  >
+                    <BarRow color="text-primary" />
+                  </div>
+                </div>
+              );
+            })()}
             <div className="flex items-center gap-6">
               <button
-                onClick={() => { if (audioRef.current) audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10); }}
+                onClick={() => {
+                  if (!audioRef.current) return;
+                  const t = Math.max(0, audioRef.current.currentTime - 10);
+                  audioRef.current.currentTime = t;
+                  setPlaybackTime(t);
+                }}
                 className="size-12 rounded-full flex items-center justify-center text-slate-400 hover:text-primary transition-colors"
               >
                 <span className="material-symbols-outlined text-3xl">replay_10</span>
@@ -242,7 +287,12 @@ export default function LessonSession({
                 </span>
               </button>
               <button
-                onClick={() => { if (audioRef.current) audioRef.current.currentTime = Math.min(duration, audioRef.current.currentTime + 10); }}
+                onClick={() => {
+                  if (!audioRef.current) return;
+                  const t = Math.min(duration, audioRef.current.currentTime + 10);
+                  audioRef.current.currentTime = t;
+                  setPlaybackTime(t);
+                }}
                 className="size-12 rounded-full flex items-center justify-center text-slate-400 hover:text-primary transition-colors"
               >
                 <span className="material-symbols-outlined text-3xl">forward_10</span>
@@ -250,7 +300,7 @@ export default function LessonSession({
             </div>
             <div className="w-full max-w-md">
               <div className="flex justify-between text-xs text-slate-500 mb-2 font-medium">
-                <span>{String(Math.floor(playbackTime / 60)).padStart(2, "0")}:{String(playbackTime % 60).padStart(2, "0")}</span>
+                <span>{String(Math.floor(playbackTime / 60)).padStart(2, "0")}:{String(Math.floor(playbackTime % 60)).padStart(2, "0")}</span>
                 <span>{currentClip?.duration}</span>
               </div>
               <div
@@ -258,8 +308,9 @@ export default function LessonSession({
                 onClick={(e) => {
                   if (!audioRef.current || !duration) return;
                   const rect = e.currentTarget.getBoundingClientRect();
-                  const ratio = (e.clientX - rect.left) / rect.width;
-                  audioRef.current.currentTime = ratio * duration;
+                  const t = ((e.clientX - rect.left) / rect.width) * duration;
+                  audioRef.current.currentTime = t;
+                  setPlaybackTime(t);
                 }}
               >
                 <div className="absolute h-full bg-primary rounded-full" style={{ width: `${progressPercent}%` }} />

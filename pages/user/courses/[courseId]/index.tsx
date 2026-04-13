@@ -93,19 +93,12 @@ export default function CourseDetailPage() {
   return (
     <div className="flex flex-col min-h-0 flex-1 overflow-y-auto">
       {/* Breadcrumb bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-20">
+      <div className="flex items-center px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-20">
         <div className="flex min-w-0 items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
           <Link className="hover:text-primary transition-colors" href="/user/courses">Khoá học</Link>
           <span className="material-symbols-outlined text-xs">chevron_right</span>
           <span className="truncate font-semibold text-slate-900 dark:text-slate-100">{course.title}</span>
         </div>
-        <Link
-          href={`/user/courses/${courseId}/lessons`}
-          className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-md shadow-primary/25 hover:bg-primary/90 transition-all"
-        >
-          <span className="material-symbols-outlined text-sm">play_circle</span>
-          {hasStarted ? 'Tiếp tục học' : 'Bắt đầu học'}
-        </Link>
       </div>
 
       {/* Hero section — full width, split left/right */}
