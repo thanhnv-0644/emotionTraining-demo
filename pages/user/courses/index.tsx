@@ -41,6 +41,7 @@ export default function Courses() {
   const [tab, setTab] = useState<'enrolled' | 'explore'>('enrolled');
   const [loading, setLoading] = useState(true);
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
+  const [payingId, setPayingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
 
@@ -140,6 +141,20 @@ export default function Courses() {
   const filteredHistory = search.trim()
     ? history.filter(h => h.keyword.toLowerCase().includes(search.toLowerCase()))
     : history;
+
+  async function handleBuy(courseId: string) {
+    setPayingId(courseId);
+    setError('');
+    try {
+      const res = await api.post<{ paymentUrl: string }>('/api/payments', { courseId });
+      if (res?.paymentUrl) {
+        window.location.href = res.paymentUrl;
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Không thể tạo thanh toán.');
+      setPayingId(null);
+    }
+  }
 
   async function handleEnroll(courseId: string) {
     setEnrollingId(courseId);
@@ -324,21 +339,33 @@ export default function Courses() {
                       Tiếp tục học
                     </Link>
                   ) : (
-                    <button
-                      onClick={() => course.isFree ? handleEnroll(course.id) : undefined}
-                      disabled={enrollingId === course.id || !course.isFree}
-                      className={`w-full py-2.5 rounded-lg text-sm font-bold text-center transition-colors ${
-                        course.isFree
-                          ? 'bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/20 disabled:opacity-60'
-                          : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 cursor-not-allowed'
-                      }`}
-                    >
-                      {enrollingId === course.id
-                        ? 'Đang đăng ký...'
-                        : course.isFree
-                          ? 'Đăng ký miễn phí'
-                          : 'Mua khoá học'}
-                    </button>
+                    (course.isFree || !course.price) ? (
+                      <button
+                        onClick={() => handleEnroll(course.id)}
+                        disabled={enrollingId === course.id}
+                        className="w-full py-2.5 rounded-lg text-sm font-bold text-center bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/20 disabled:opacity-60 transition-colors"
+                      >
+                        {enrollingId === course.id ? 'Đang đăng ký...' : 'Đăng ký miễn phí'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleBuy(course.id)}
+                        disabled={payingId === course.id}
+                        className="w-full py-2.5 rounded-lg text-sm font-bold text-center bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-500/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+                      >
+                        {payingId === course.id ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Đang xử lý...
+                          </>
+                        ) : (
+                          <>
+                            <span className="material-symbols-outlined text-[16px]">payment</span>
+                            Mua · {course.price.toLocaleString('vi-VN')}đ
+                          </>
+                        )}
+                      </button>
+                    )
                   )}
                 </div>
               </div>

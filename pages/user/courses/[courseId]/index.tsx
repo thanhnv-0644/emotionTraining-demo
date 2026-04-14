@@ -46,6 +46,7 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<Tab>('reviews');
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     if (!courseId) return;
@@ -89,6 +90,17 @@ export default function CourseDetailPage() {
   const progressPct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
   const hasStarted = completedCount > 0;
   const level = LEVEL_CONFIG[course.category];
+  const isPaid = !course.isFree && course.price > 0;
+
+  async function handleBuy() {
+    setPaying(true);
+    try {
+      const res = await api.post<{ paymentUrl: string }>('/api/payments', { courseId });
+      if (res?.paymentUrl) window.location.href = res.paymentUrl;
+    } catch {
+      setPaying(false);
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-0 flex-1 overflow-y-auto">
@@ -234,13 +246,33 @@ export default function CourseDetailPage() {
                   Truy cập trọn đời
                 </li>
               </ul>
-              <Link
-                href={`/user/courses/${courseId}/lessons`}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors mt-1"
-              >
-                <span className="material-symbols-outlined text-base">play_circle</span>
-                {hasStarted ? 'Tiếp tục học' : 'Bắt đầu học'}
-              </Link>
+              {isPaid && !course.enrolled ? (
+                <button
+                  onClick={handleBuy}
+                  disabled={paying}
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-amber-500 text-white font-bold text-sm shadow-lg shadow-amber-500/25 hover:bg-amber-600 transition-colors mt-1 disabled:opacity-60"
+                >
+                  {paying ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-base">payment</span>
+                      Mua khoá học · {course.price.toLocaleString('vi-VN')}đ
+                    </>
+                  )}
+                </button>
+              ) : (
+                <Link
+                  href={`/user/courses/${courseId}/lessons`}
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors mt-1"
+                >
+                  <span className="material-symbols-outlined text-base">play_circle</span>
+                  {hasStarted ? 'Tiếp tục học' : 'Bắt đầu học'}
+                </Link>
+              )}
             </div>
           </div>
         </div>
