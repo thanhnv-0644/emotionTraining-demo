@@ -24,6 +24,7 @@ export default function Leaderboard() {
   const { user } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [myRank, setMyRank] = useState<number | null>(null);
+  const [myEntry, setMyEntry] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,8 +32,11 @@ export default function Leaderboard() {
       api.get<LeaderboardEntry[]>('/api/leaderboard?limit=20'),
       api.get<number>('/api/leaderboard/me'),
     ]).then(([list, rank]) => {
-      setEntries(list ?? []);
-      setMyRank(rank ?? null);
+      const safeList = list ?? [];
+      setEntries(safeList);
+      setMyRank(typeof rank === 'number' && rank > 0 ? rank : null);
+      const found = safeList.find(e => e.userId === user?.id) ?? null;
+      setMyEntry(found);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -50,20 +54,39 @@ export default function Leaderboard() {
       <div className="app-content">
 
         {/* My rank banner */}
-        {!loading && myRank !== null && myRank > 0 && (
-          <div className="bg-gradient-to-r from-primary to-indigo-600 rounded-2xl p-5 text-white flex items-center justify-between gap-4 shadow-lg shadow-primary/20">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-2xl">person</span>
+        {!loading && myRank !== null && (
+          <div className="bg-gradient-to-r from-primary to-indigo-600 rounded-2xl p-5 text-white shadow-lg shadow-primary/20">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 overflow-hidden">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xl font-black">{user?.name?.[0]?.toUpperCase()}</span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-white/70 text-sm">Thứ hạng của bạn</p>
+                  <p className="text-3xl font-black">#{myRank}</p>
+                  <p className="text-white/80 text-sm font-medium">{user?.name}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-white/70 text-sm">Thứ hạng của bạn</p>
-                <p className="text-2xl font-black">#{myRank}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-white/70 text-sm">trong top {entries.length}</p>
-              <p className="font-bold">{user?.name}</p>
+              {myEntry && (
+                <div className="flex gap-4 text-right">
+                  <div>
+                    <p className="text-white/60 text-xs">XP</p>
+                    <p className="text-lg font-black text-amber-300">{myEntry.xp.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/60 text-xs">Bài học</p>
+                    <p className="text-lg font-black">{myEntry.totalLessonsCompleted}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/60 text-xs">Điểm TB</p>
+                    <p className="text-lg font-black">{myEntry.avgScore > 0 ? `${myEntry.avgScore}%` : '—'}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

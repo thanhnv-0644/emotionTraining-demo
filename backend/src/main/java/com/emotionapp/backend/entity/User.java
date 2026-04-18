@@ -53,7 +53,7 @@ public class User {
     private LocalDateTime deletedAt;
 
     public enum Role {
-        student, instructor, admin
+        student, admin
     }
 
     public enum Status {

@@ -26,12 +26,6 @@ public class LeaderboardController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<Integer>> getMyRank() {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<LeaderboardEntryResponse> all = leaderboardService.getLeaderboard(50);
-        int rank = all.stream()
-                .filter(e -> e.getUserId().equals(userId))
-                .map(LeaderboardEntryResponse::getRank)
-                .findFirst()
-                .orElse(-1);
-        return ResponseEntity.ok(ApiResponse.success(rank));
+        return ResponseEntity.ok(ApiResponse.success(leaderboardService.getUserRank(userId)));
     }
 }

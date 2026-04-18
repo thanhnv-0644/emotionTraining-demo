@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,6 +17,22 @@ public class LeaderboardService {
 
     private final UserRepository userRepository;
     private final UserProgressRepository userProgressRepository;
+
+    public int getUserRank(String userId) {
+        // Count how many active students have strictly higher XP
+        Optional<User> target = userRepository.findByDeletedAtIsNull().stream()
+                .filter(u -> u.getId().equals(userId))
+                .findFirst();
+        if (target.isEmpty()) return -1;
+        int userXp = target.get().getXp() != null ? target.get().getXp() : 0;
+
+        long higherCount = userRepository.findByDeletedAtIsNull().stream()
+                .filter(u -> u.getStatus() == User.Status.active
+                          && u.getRole() == User.Role.student
+                          && (u.getXp() != null ? u.getXp() : 0) > userXp)
+                .count();
+        return (int) higherCount + 1;
+    }
 
     public List<LeaderboardEntryResponse> getLeaderboard(int limit) {
         // Aggregate progress stats per user in one query

@@ -10,7 +10,7 @@ CREATE TABLE `users` (
   `email`        VARCHAR(255) NOT NULL,
   `passwordHash` VARCHAR(255)     NULL COMMENT 'NULL nếu đăng nhập bằng OAuth',
   `avatar`       VARCHAR(500)     NULL,
-  `role`         ENUM('student','instructor','admin') NOT NULL DEFAULT 'student',
+  `role`         ENUM('student','admin') NOT NULL DEFAULT 'student',
   `xp`           INT          NOT NULL DEFAULT 0,
   `lastActiveAt` DATETIME         NULL,
   `status`       ENUM('active','inactive','suspended') NOT NULL DEFAULT 'active',
