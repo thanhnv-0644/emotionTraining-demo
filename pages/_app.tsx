@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app';
 import type { ReactNode } from 'react';
 import { Be_Vietnam_Pro } from 'next/font/google';
+import 'material-symbols/outlined.css';
 import '../globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 

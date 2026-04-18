@@ -187,13 +187,45 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(txnRef)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Payment not found"));
 
-        // Chỉ cập nhật nếu IPN chưa xử lý
-        if (payment.getStatus() == Payment.Status.pending) {
-            LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        String transactionStatus = params.get("vnp_TransactionStatus");
+        String vnpTransactionNo  = params.get("vnp_TransactionNo");
+        boolean isSuccess = "00".equals(responseCode) && "00".equals(transactionStatus);
+
+        if (payment.getStatus() == Payment.Status.completed) {
+            // IPN đã xử lý thành công trước → trả về luôn
+            return toResponse(payment, null);
+        }
+
+        if (isSuccess) {
+            // Thanh toán thành công — VNPay cho thử lại nhiều lần trong 1 phiên,
+            // nên status có thể đang là cancelled/failed từ lần huỷ trước.
+            payment.setStatus(Payment.Status.completed);
+            payment.setTransactionId(vnpTransactionNo);
+            payment.setPaidAt(now);
+            payment.setUpdatedAt(now);
+            paymentRepository.save(payment);
+
+            // Tạo enrollment nếu chưa có
+            if (!enrollmentRepository.existsByUserIdAndCourseId(
+                    payment.getUser().getId(), payment.getCourse().getId())) {
+                Enrollment enrollment = Enrollment.builder()
+                        .id("enroll_" + UUID.randomUUID().toString().replace("-", "").substring(0, 10))
+                        .user(payment.getUser())
+                        .course(payment.getCourse())
+                        .payment(payment)
+                        .status(Enrollment.Status.active)
+                        .createdAt(now)
+                        .build();
+                enrollmentRepository.save(enrollment);
+                log.info("Return URL: enrollment created for user {} course {}",
+                        payment.getUser().getId(), payment.getCourse().getId());
+            }
+        } else if (payment.getStatus() == Payment.Status.pending) {
+            // Chỉ set cancelled/failed nếu còn pending (tránh ghi đè completed từ IPN)
             if ("24".equals(responseCode)) {
-                // User bấm Huỷ trên trang VNPay
                 payment.setStatus(Payment.Status.cancelled);
-            } else if (!"00".equals(responseCode)) {
+            } else {
                 payment.setStatus(Payment.Status.failed);
                 payment.setFailureReason("vnp_ResponseCode=" + responseCode);
             }

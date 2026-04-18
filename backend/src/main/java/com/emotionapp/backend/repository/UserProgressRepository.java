@@ -17,4 +17,9 @@ public interface UserProgressRepository extends JpaRepository<UserProgress, Stri
 
     @Query("SELECT p FROM UserProgress p WHERE p.completedAt IS NOT NULL AND p.user.id = :userId")
     List<UserProgress> findCompletedByUserId(String userId);
+
+    @Query("SELECT p.user.id, COUNT(p.id), AVG(p.score) FROM UserProgress p WHERE p.completedAt IS NOT NULL GROUP BY p.user.id")
+    List<Object[]> findProgressStatsByUser();
+
+    List<UserProgress> findByCompletedAtAfter(LocalDateTime after);
 }
