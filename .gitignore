@@ -15,3 +15,9 @@ prisma.config.ts
 
 # Python AI service venv
 GR/web/ai-service/venv/
+
+# AI model files (too large for GitHub)
+AI/__pycache__/
+AI/*.pyc
+AI/*.pt
+AI/*.pth

@@ -42,6 +42,20 @@ interface AudioClipResponse {
   order: number;
 }
 
+interface AiResult {
+  filename: string;
+  emotion: string;
+  confidence: number;
+  scores: Record<string, number>;
+  subject: string;
+  file: File;
+}
+
+const EMOTION_VI: Record<string, string> = {
+  happiness: "Hạnh phúc", sadness: "Buồn bã", anger: "Tức giận",
+  surprise: "Ngạc nhiên", fear: "Sợ hãi", disgust: "Ghê tởm", neutral: "Bình thản",
+};
+
 const EMOTION_COLORS: Record<string, { bg: string; text: string }> = {
   happiness: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400" },
   sadness:   { bg: "bg-blue-100 dark:bg-blue-900/30",   text: "text-blue-700 dark:text-blue-400" },
@@ -69,6 +83,16 @@ function LevelBadge({ level }: { level: string }) {
       {cfg.label}
     </span>
   );
+}
+
+function getAudioDuration(file: File): Promise<number> {
+  return new Promise(resolve => {
+    const audio = new Audio();
+    const url = URL.createObjectURL(file);
+    audio.addEventListener('loadedmetadata', () => { URL.revokeObjectURL(url); resolve(Math.round(audio.duration)); });
+    audio.addEventListener('error', () => { URL.revokeObjectURL(url); resolve(0); });
+    audio.src = url;
+  });
 }
 
 function formatDuration(seconds: number): string {
@@ -117,9 +141,17 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // AI mode
+  const [uploadMode, setUploadMode] = useState<'manual' | 'ai'>('manual');
+  const [aiFiles, setAiFiles] = useState<File[]>([]);
+  const [aiPredicting, setAiPredicting] = useState(false);
+  const [aiSaving, setAiSaving] = useState(false);
+  const [aiResults, setAiResults] = useState<AiResult[]>([]);
+  const aiFileInputRef = useRef<HTMLInputElement>(null);
+
   // Create lesson modal
   const [showCreateLesson, setShowCreateLesson] = useState(false);
-  const [lessonForm, setLessonForm] = useState({ title: "", level: "beginner", duration: "" });
+  const [lessonForm, setLessonForm] = useState({ title: "", level: "beginner" });
   const [lessonSaving, setLessonSaving] = useState(false);
   const [lessonError, setLessonError] = useState("");
 
@@ -155,7 +187,13 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
     setClipPage(1);
     setClipsLoading(true);
     api.get<AudioClipResponse[]>(`/api/admin/lessons/${lesson.id}/audio-clips`)
-      .then(data => setClips(data ?? []))
+      .then(data => {
+        const list = data ?? [];
+        setClips(list);
+        const total = list.reduce((s, c) => s + (c.duration ?? 0), 0);
+        setLessons(prev => prev.map(l => l.id === lesson.id ? { ...l, duration: total } : l));
+        setSelectedLesson(prev => prev?.id === lesson.id ? { ...prev, duration: total } : prev);
+      })
       .catch(() => {})
       .finally(() => setClipsLoading(false));
   };
@@ -168,11 +206,11 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
       const created = await api.post<LessonResponse>(`/api/admin/courses/${courseId}/lessons`, {
         title: lessonForm.title,
         level: lessonForm.level,
-        duration: parseInt(lessonForm.duration) || 0,
+        duration: 0,
       });
       setLessons(prev => [...prev, created]);
       setShowCreateLesson(false);
-      setLessonForm({ title: "", level: "beginner", duration: "" });
+      setLessonForm({ title: "", level: "beginner" });
     } catch (e: unknown) {
       setLessonError(e instanceof Error ? e.message : "Tạo thất bại");
     } finally { setLessonSaving(false); }
@@ -228,7 +266,15 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
     if (!confirm("Xóa audio clip này?")) return;
     try {
       await api.delete(`/api/admin/audio-clips/${clipId}`);
-      setClips(prev => prev.filter(c => c.id !== clipId));
+      setClips(prev => {
+        const next = prev.filter(c => c.id !== clipId);
+        const total = next.reduce((s, c) => s + (c.duration ?? 0), 0);
+        if (selectedLesson) {
+          setLessons(ls => ls.map(l => l.id === selectedLesson.id ? { ...l, duration: total } : l));
+          setSelectedLesson(sl => sl ? { ...sl, duration: total } : sl);
+        }
+        return next;
+      });
     } catch {
       alert("Xóa thất bại.");
     }
@@ -264,10 +310,12 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
     if (!uploadFile || !uploadSubject) return;
     setUploading(true);
     try {
+      const duration = await getAudioDuration(uploadFile);
       const formData = new FormData();
       formData.append("file", uploadFile);
       formData.append("subject", uploadSubject);
       formData.append("targetEmotion", uploadEmotion);
+      formData.append("duration", String(duration));
       const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
       const res = await fetch(`${BASE_URL}/api/admin/lessons/${lessonId}/audio-clips`, {
         method: "POST",
@@ -276,13 +324,90 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
       });
       if (!res.ok) throw new Error("Upload thất bại");
       const json = await res.json();
-      setClips(prev => [...prev, json.data]);
+      setClips(prev => {
+        const next = [...prev, json.data];
+        const total = next.reduce((s, c) => s + (c.duration ?? 0), 0);
+        setLessons(ls => ls.map(l => l.id === lessonId ? { ...l, duration: total } : l));
+        setSelectedLesson(sl => sl?.id === lessonId ? { ...sl, duration: total } : sl);
+        return next;
+      });
       setUploadSubject("");
       setUploadFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
       alert("Upload thất bại.");
     } finally { setUploading(false); }
+  };
+
+  // ── AI predict ─────────────────────────────────────────────────
+  const handleAiPredict = async () => {
+    if (!aiFiles.length) return;
+    setAiPredicting(true);
+    setAiResults([]);
+    try {
+      const formData = new FormData();
+      aiFiles.forEach(f => formData.append("files", f));
+      const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+      const res = await fetch(`${BASE_URL}/api/admin/ai/predict`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message ?? "AI service không khả dụng");
+      }
+      const json = await res.json();
+      const predictions: AiResult[] = (json.data as any[]).map((p, i) => ({
+        filename: p.filename,
+        emotion: p.emotion,
+        confidence: p.confidence,
+        scores: p.scores,
+        subject: p.filename.replace(/\.[^.]+$/, ""),
+        file: aiFiles[i],
+      }));
+      setAiResults(predictions);
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Lỗi khi gọi AI");
+    } finally { setAiPredicting(false); }
+  };
+
+  const handleAiSaveAll = async (lessonId: string) => {
+    if (!aiResults.length) return;
+    setAiSaving(true);
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+      const saved: AudioClipResponse[] = [];
+      for (const r of aiResults) {
+        const duration = await getAudioDuration(r.file);
+        const formData = new FormData();
+        formData.append("file", r.file);
+        formData.append("subject", r.subject || r.filename);
+        formData.append("targetEmotion", r.emotion);
+        formData.append("duration", String(duration));
+        const res = await fetch(`${BASE_URL}/api/admin/lessons/${lessonId}/audio-clips`, {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+        if (res.ok) {
+          const json = await res.json();
+          saved.push(json.data);
+        }
+      }
+      setClips(prev => {
+        const next = [...prev, ...saved];
+        const total = next.reduce((s, c) => s + (c.duration ?? 0), 0);
+        setLessons(ls => ls.map(l => l.id === lessonId ? { ...l, duration: total } : l));
+        setSelectedLesson(sl => sl?.id === lessonId ? { ...sl, duration: total } : sl);
+        return next;
+      });
+      setAiResults([]);
+      setAiFiles([]);
+      if (aiFileInputRef.current) aiFileInputRef.current.value = "";
+    } catch {
+      alert("Lưu thất bại.");
+    } finally { setAiSaving(false); }
   };
 
   const displayedLessons = lessons.filter(l =>
@@ -325,7 +450,7 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
         {/* Action button */}
         {!selectedLesson && (
           <button
-            onClick={() => { setShowCreateLesson(true); setLessonForm({ title: "", level: "beginner", duration: "" }); setLessonError(""); }}
+            onClick={() => { setShowCreateLesson(true); setLessonForm({ title: "", level: "beginner" }); setLessonError(""); }}
             className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm"
           >
             <span className="material-symbols-outlined text-base">add</span>
@@ -531,88 +656,202 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
 
             {/* Upload form */}
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-base">cloud_upload</span>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Thêm audio clip mới</h3>
+              {/* Header + mode toggle */}
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-base">cloud_upload</span>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">Thêm audio clip mới</h3>
+                </div>
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                  <button
+                    onClick={() => { setUploadMode('manual'); setAiResults([]); setAiFiles([]); }}
+                    className={`px-3 py-1 rounded-md text-xs font-bold transition-colors ${uploadMode === 'manual' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Thủ công
+                  </button>
+                  <button
+                    onClick={() => { setUploadMode('ai'); setUploadFile(null); }}
+                    className={`px-3 py-1 rounded-md text-xs font-bold transition-colors flex items-center gap-1 ${uploadMode === 'ai' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                    AI
+                  </button>
+                </div>
               </div>
-              <div className="p-6 space-y-4">
-                {/* Drop zone */}
-                <label className={`flex flex-col items-center justify-center gap-3 w-full h-36 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
-                  uploadFile
-                    ? "border-primary/50 bg-primary/5"
-                    : "border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5"
-                }`}>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="audio/*"
-                    className="hidden"
-                    onChange={e => setUploadFile(e.target.files?.[0] ?? null)}
-                  />
-                  {uploadFile ? (
-                    <>
-                      <span className="material-symbols-outlined text-4xl text-primary">audio_file</span>
-                      <div className="text-center">
-                        <p className="text-sm font-bold text-primary">{uploadFile.name}</p>
-                        <p className="text-xs text-slate-500">{(uploadFile.size / 1024).toFixed(0)} KB</p>
+
+              {/* ── Manual mode ── */}
+              {uploadMode === 'manual' && (
+                <div className="p-6 space-y-4">
+                  <label className={`flex flex-col items-center justify-center gap-3 w-full h-36 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+                    uploadFile ? "border-primary/50 bg-primary/5" : "border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5"
+                  }`}>
+                    <input ref={fileInputRef} type="file" accept="audio/*" className="hidden"
+                      onChange={e => setUploadFile(e.target.files?.[0] ?? null)} />
+                    {uploadFile ? (
+                      <>
+                        <span className="material-symbols-outlined text-4xl text-primary">audio_file</span>
+                        <div className="text-center">
+                          <p className="text-sm font-bold text-primary">{uploadFile.name}</p>
+                          <p className="text-xs text-slate-500">{(uploadFile.size / 1024).toFixed(0)} KB</p>
+                        </div>
+                        <button type="button" onClick={e => { e.preventDefault(); setUploadFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                          className="text-xs text-red-500 hover:underline">Xoá file</button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-4xl text-slate-300">cloud_upload</span>
+                        <div className="text-center">
+                          <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Kéo thả hoặc <span className="text-primary">chọn file</span></p>
+                          <p className="text-xs text-slate-400 mt-1">MP3, WAV, OGG, M4A...</p>
+                        </div>
+                      </>
+                    )}
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Tên / Chủ đề clip *</label>
+                      <input type="text" placeholder="VD: Người phụ nữ đang khóc" value={uploadSubject}
+                        onChange={e => setUploadSubject(e.target.value)} className={inputCls} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Cảm xúc mục tiêu *</label>
+                      <select value={uploadEmotion} onChange={e => setUploadEmotion(e.target.value)} className={inputCls}>
+                        {EMOTIONS.map(e => <option key={e} value={e}>{EMOTION_VI[e] ?? e}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <button onClick={() => handleUpload(selectedLesson.id)} disabled={uploading || !uploadFile || !uploadSubject}
+                    className="w-full py-2.5 bg-primary text-white rounded-lg text-sm font-bold disabled:opacity-40 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                    {uploading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Đang upload...</> : <><span className="material-symbols-outlined text-base">cloud_upload</span>Tải lên</>}
+                  </button>
+                </div>
+              )}
+
+              {/* ── AI mode ── */}
+              {uploadMode === 'ai' && (
+                <div className="p-6 space-y-4">
+                  {/* Multi-file drop zone */}
+                  {/* Hidden input — luôn append */}
+                  <input ref={aiFileInputRef} type="file" accept="audio/*" multiple className="hidden"
+                    onChange={e => {
+                      const newFiles = Array.from(e.target.files ?? []);
+                      setAiFiles(prev => {
+                        const existingNames = new Set(prev.map(f => f.name));
+                        const merged = [...prev, ...newFiles.filter(f => !existingNames.has(f.name))];
+                        if (merged.length > 50) {
+                          alert(`Tối đa 50 file mỗi lần phân tích. Đã giữ ${Math.min(prev.length + newFiles.length, 50)} file đầu.`);
+                          return merged.slice(0, 50);
+                        }
+                        return merged;
+                      });
+                      if (aiFileInputRef.current) aiFileInputRef.current.value = "";
+                    }} />
+
+                  {aiFiles.length > 0 ? (
+                    <div className="rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 w-full overflow-hidden">
+                      <div className="max-h-52 overflow-y-auto px-4 py-3 space-y-1.5">
+                        {aiFiles.map((f, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                            <span className="material-symbols-outlined text-[16px] text-primary shrink-0">audio_file</span>
+                            <span className="truncate flex-1">{f.name}</span>
+                            <span className="text-slate-400 shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+                            <button type="button"
+                              onClick={() => setAiFiles(prev => prev.filter((_, j) => j !== i))}
+                              className="shrink-0 text-slate-300 hover:text-red-500 transition-colors">
+                              <span className="material-symbols-outlined text-[15px]">close</span>
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                      <button
-                        type="button"
-                        onClick={e => { e.preventDefault(); setUploadFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                        className="text-xs text-red-500 hover:underline"
-                      >
-                        Xoá file
-                      </button>
-                    </>
+                      <div className="flex items-center justify-between px-4 py-2.5 border-t border-primary/20">
+                        <span className="text-xs text-slate-500">{aiFiles.length} file đã chọn</span>
+                        <div className="flex items-center gap-3">
+                          <button type="button" onClick={() => { setAiFiles([]); setAiResults([]); }}
+                            className="text-xs text-red-500 hover:underline">Xoá tất cả</button>
+                          <button type="button" onClick={() => aiFileInputRef.current?.click()}
+                            className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                            <span className="material-symbols-outlined text-[14px]">add</span>
+                            Thêm file
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
-                    <>
-                      <span className="material-symbols-outlined text-4xl text-slate-300">cloud_upload</span>
+                    <label className="flex flex-col items-center justify-center gap-3 w-full h-36 rounded-xl border-2 border-dashed cursor-pointer border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                      onClick={() => aiFileInputRef.current?.click()}>
+                      <span className="material-symbols-outlined text-4xl text-slate-300">auto_awesome</span>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Kéo thả hoặc <span className="text-primary">chọn file</span></p>
+                        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Chọn <span className="text-primary">nhiều file</span> để AI phân tích</p>
                         <p className="text-xs text-slate-400 mt-1">MP3, WAV, OGG, M4A...</p>
                       </div>
-                    </>
+                    </label>
                   )}
-                </label>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Tên / Chủ đề clip *</label>
-                    <input
-                      type="text"
-                      placeholder="VD: Người phụ nữ đang khóc"
-                      value={uploadSubject}
-                      onChange={e => setUploadSubject(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Cảm xúc mục tiêu *</label>
-                    <select
-                      value={uploadEmotion}
-                      onChange={e => setUploadEmotion(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                    >
-                      {EMOTIONS.map(e => {
-                        const EMOTION_VI: Record<string, string> = { happiness: "Hạnh phúc", sadness: "Buồn bã", anger: "Tức giận", surprise: "Ngạc nhiên", fear: "Sợ hãi", disgust: "Ghê tởm", neutral: "Bình thản" };
-                        return <option key={e} value={e}>{EMOTION_VI[e] ?? e}</option>;
-                      })}
-                    </select>
-                  </div>
+                  {/* Predict button */}
+                  {aiFiles.length > 0 && aiResults.length === 0 && (
+                    <button onClick={handleAiPredict} disabled={aiPredicting}
+                      className="w-full py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-bold disabled:opacity-40 hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                      {aiPredicting
+                        ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Đang phân tích {aiFiles.length} file...</>
+                        : <><span className="material-symbols-outlined text-base">auto_awesome</span>Phân tích cảm xúc ({aiFiles.length} file)</>}
+                    </button>
+                  )}
+
+                  {/* Results preview */}
+                  {aiResults.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kết quả — chỉnh sửa trước khi lưu</p>
+                      {aiResults.map((r, i) => (
+                        <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[18px] text-primary shrink-0">audio_file</span>
+                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 truncate flex-1">{r.filename}</span>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                              r.confidence >= 0.8 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                              : r.confidence >= 0.6 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                            }`}>
+                              {(r.confidence * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-xs text-slate-500">Chủ đề</label>
+                              <input type="text" value={r.subject}
+                                onChange={e => setAiResults(prev => prev.map((x, j) => j === i ? { ...x, subject: e.target.value } : x))}
+                                className={inputCls} />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs text-slate-500">Cảm xúc AI dự đoán</label>
+                              <select value={r.emotion}
+                                onChange={e => setAiResults(prev => prev.map((x, j) => j === i ? { ...x, emotion: e.target.value } : x))}
+                                className={inputCls}>
+                                {EMOTIONS.map(e => <option key={e} value={e}>{EMOTION_VI[e] ?? e}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                          {/* Confidence bars */}
+                          <div className="space-y-1">
+                            {Object.entries(r.scores).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([emo, score]) => (
+                              <div key={emo} className="flex items-center gap-2">
+                                <span className="text-xs text-slate-500 w-20 shrink-0">{EMOTION_VI[emo] ?? emo}</span>
+                                <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${score * 100}%` }} />
+                                </div>
+                                <span className="text-xs text-slate-400 w-9 text-right">{(score * 100).toFixed(0)}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <button onClick={() => handleAiSaveAll(selectedLesson.id)} disabled={aiSaving}
+                        className="w-full py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-bold disabled:opacity-40 hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
+                        {aiSaving ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Đang lưu...</> : <><span className="material-symbols-outlined text-base">save</span>Lưu tất cả {aiResults.length} clip</>}
+                      </button>
+                    </div>
+                  )}
                 </div>
-
-                <button
-                  onClick={() => handleUpload(selectedLesson.id)}
-                  disabled={uploading || !uploadFile || !uploadSubject}
-                  className="w-full py-2.5 bg-primary text-white rounded-lg text-sm font-bold disabled:opacity-40 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-                >
-                  {uploading ? (
-                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Đang upload...</>
-                  ) : (
-                    <><span className="material-symbols-outlined text-base">cloud_upload</span>Tải lên</>
-                  )}
-                </button>
-              </div>
+              )}
             </div>
 
             {/* Danh sách clips */}
@@ -706,17 +945,11 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tên bài học *</label>
               <input className={inputCls} value={lessonForm.title} onChange={e => setLessonForm(f => ({ ...f, title: e.target.value }))} placeholder="VD: Nhận diện niềm vui" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Cấp độ</label>
-                <select className={inputCls} value={lessonForm.level} onChange={e => setLessonForm(f => ({ ...f, level: e.target.value }))}>
-                  {LEVELS.map(l => <option key={l} value={l}>{l === "beginner" ? "Cơ bản" : l === "intermediate" ? "Trung cấp" : "Nâng cao"}</option>)}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Thời lượng (giây)</label>
-                <input className={inputCls} type="number" min="0" value={lessonForm.duration} onChange={e => setLessonForm(f => ({ ...f, duration: e.target.value }))} placeholder="VD: 600" />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Cấp độ</label>
+              <select className={inputCls} value={lessonForm.level} onChange={e => setLessonForm(f => ({ ...f, level: e.target.value }))}>
+                {LEVELS.map(l => <option key={l} value={l}>{l === "beginner" ? "Cơ bản" : l === "intermediate" ? "Trung cấp" : "Nâng cao"}</option>)}
+              </select>
             </div>
             {lessonError && <p className="text-red-500 text-sm">{lessonError}</p>}
             <div className="flex gap-3 pt-2">

@@ -27,6 +27,11 @@ interface CourseForm {
   status: string;
 }
 
+interface LessonDraft {
+  title: string;
+  level: string;
+}
+
 const EMPTY_FORM: CourseForm = { title: '', description: '', category: 'easy', price: '0', status: 'draft' };
 
 const LEVELS = ['easy', 'medium', 'advanced'] as const;
@@ -64,6 +69,15 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</label>
+      {children}
+    </div>
+  );
+}
+
 export default function AdminCourses() {
   const [courses, setCourses] = useState<CourseResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,10 +91,18 @@ export default function AdminCourses() {
 
   // Modal state
   const [modal, setModal] = useState<'create' | 'edit' | null>(null);
+  const [createStep, setCreateStep] = useState<'course' | 'lessons'>('course');
+  const [newCourseId, setNewCourseId] = useState<string | null>(null);
   const [form, setForm] = useState<CourseForm>(EMPTY_FORM);
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+
+  // Lesson drafts (for step 2 of create)
+  const [lessonDrafts, setLessonDrafts] = useState<LessonDraft[]>([]);
+  const [lessonInput, setLessonInput] = useState({ title: '', level: 'beginner' });
+  const [lessonAdding, setLessonAdding] = useState(false);
+  const [lessonAddError, setLessonAddError] = useState('');
 
   const load = () => {
     setLoading(true);
@@ -110,6 +132,11 @@ export default function AdminCourses() {
   const openCreate = () => {
     setForm(EMPTY_FORM);
     setFormError('');
+    setCreateStep('course');
+    setNewCourseId(null);
+    setLessonDrafts([]);
+    setLessonInput({ title: '', level: 'beginner' });
+    setLessonAddError('');
     setModal('create');
   };
 
@@ -137,10 +164,28 @@ export default function AdminCourses() {
         price: parseInt(form.price) || 0,
       });
       setCourses(prev => [...prev, created]);
-      setModal(null);
+      setNewCourseId(created.id);
+      setCreateStep('lessons');
     } catch (e: unknown) {
       setFormError(e instanceof Error ? e.message : 'Tạo thất bại');
     } finally { setSaving(false); }
+  };
+
+  const handleAddLesson = async () => {
+    if (!lessonInput.title.trim()) { setLessonAddError('Vui lòng nhập tên bài học'); return; }
+    if (!newCourseId) return;
+    setLessonAdding(true); setLessonAddError('');
+    try {
+      await api.post(`/api/admin/courses/${newCourseId}/lessons`, {
+        title: lessonInput.title,
+        level: lessonInput.level,
+        duration: 0,
+      });
+      setLessonDrafts(prev => [...prev, { title: lessonInput.title, level: lessonInput.level }]);
+      setLessonInput({ title: '', level: 'beginner' });
+    } catch (e: unknown) {
+      setLessonAddError(e instanceof Error ? e.message : 'Thêm thất bại');
+    } finally { setLessonAdding(false); }
   };
 
   const handleUpdate = async () => {
@@ -172,12 +217,6 @@ export default function AdminCourses() {
     }
   };
 
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="space-y-1.5">
-      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</label>
-      {children}
-    </div>
-  );
 
   const inputCls = "w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none";
 
@@ -354,50 +393,122 @@ export default function AdminCourses() {
       {/* Create / Edit Modal */}
       {modal && (
         <Modal
-          title={modal === 'create' ? 'Tạo khoá học mới' : 'Sửa khoá học'}
+          title={modal === 'edit' ? 'Sửa khoá học' : createStep === 'course' ? 'Tạo khoá học mới' : 'Thêm bài học'}
           onClose={() => setModal(null)}
         >
-          <div className="space-y-4">
-            <Field label="Tên khoá học *">
-              <input className={inputCls} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="VD: Nhận diện cảm xúc cơ bản" />
-            </Field>
-            <Field label="Mô tả">
-              <textarea className={inputCls} rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Mô tả ngắn về khoá học..." />
-            </Field>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Cấp độ">
-                <select className={inputCls} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                  {LEVELS.map(l => <option key={l} value={l}>{LEVEL_CONFIG[l].label}</option>)}
-                </select>
+          {/* ── Step 1: Course info ── */}
+          {(modal === 'edit' || createStep === 'course') && (
+            <div className="space-y-4">
+              <Field label="Tên khoá học *">
+                <input className={inputCls} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="VD: Nhận diện cảm xúc cơ bản" />
               </Field>
-              <Field label="Giá (đ)">
-                <input className={inputCls} type="number" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="0 = miễn phí" />
+              <Field label="Mô tả">
+                <textarea className={inputCls} rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Mô tả ngắn về khoá học..." />
               </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Cấp độ">
+                  <select className={inputCls} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+                    {LEVELS.map(l => <option key={l} value={l}>{LEVEL_CONFIG[l].label}</option>)}
+                  </select>
+                </Field>
+                <Field label="Giá (đ)">
+                  <input className={inputCls} type="number" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="0 = miễn phí" />
+                </Field>
+              </div>
+              {modal === 'edit' && (
+                <Field label="Trạng thái">
+                  <select className={inputCls} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
+                    {STATUS_OPTIONS.map(s => (
+                      <option key={s} value={s}>{s === 'published' ? 'Xuất bản' : s === 'draft' ? 'Nháp' : 'Lưu trữ'}</option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+              {formError && <p className="text-red-500 text-sm">{formError}</p>}
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  Huỷ
+                </button>
+                <button
+                  onClick={modal === 'create' ? handleCreate : handleUpdate}
+                  disabled={saving}
+                  className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  {saving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                  {modal === 'create' ? 'Tiếp theo →' : 'Lưu thay đổi'}
+                </button>
+              </div>
             </div>
-            {modal === 'edit' && (
-              <Field label="Trạng thái">
-                <select className={inputCls} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
-                  {STATUS_OPTIONS.map(s => (
-                    <option key={s} value={s}>{s === 'published' ? 'Xuất bản' : s === 'draft' ? 'Nháp' : 'Lưu trữ'}</option>
-                  ))}
-                </select>
-              </Field>
-            )}
-            {formError && <p className="text-red-500 text-sm">{formError}</p>}
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                Huỷ
-              </button>
+          )}
+
+          {/* ── Step 2: Add lessons ── */}
+          {modal === 'create' && createStep === 'lessons' && (
+            <div className="space-y-4">
+              {/* Success banner */}
+              <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                <span className="material-symbols-outlined text-emerald-500 text-base">check_circle</span>
+                <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Khoá học <span className="font-bold">"{form.title}"</span> đã được tạo!</p>
+              </div>
+
+              {/* Lesson list so far */}
+              {lessonDrafts.length > 0 && (
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+                  {lessonDrafts.map((l, i) => {
+                    const cfg = { beginner: LEVEL_CONFIG.easy, intermediate: LEVEL_CONFIG.medium, advanced: LEVEL_CONFIG.advanced }[l.level] ?? LEVEL_CONFIG.easy;
+                    return (
+                      <div key={i} className="flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-slate-900">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</div>
+                        <span className="text-sm flex-1 text-slate-800 dark:text-slate-200">{l.title}</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add lesson input */}
+              <div className="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Thêm bài học</p>
+                <input
+                  className={inputCls}
+                  value={lessonInput.title}
+                  onChange={e => setLessonInput(f => ({ ...f, title: e.target.value }))}
+                  onKeyDown={e => { if (e.key === 'Enter') handleAddLesson(); }}
+                  placeholder="Tên bài học..."
+                />
+                <div className="flex gap-2">
+                  <select className={`${inputCls} flex-1`} value={lessonInput.level} onChange={e => setLessonInput(f => ({ ...f, level: e.target.value }))}>
+                    <option value="beginner">Cơ bản</option>
+                    <option value="intermediate">Trung cấp</option>
+                    <option value="advanced">Nâng cao</option>
+                  </select>
+                  <button
+                    onClick={handleAddLesson}
+                    disabled={lessonAdding || !lessonInput.title.trim()}
+                    className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary/90 disabled:opacity-40 transition-colors flex items-center gap-1 flex-shrink-0"
+                  >
+                    {lessonAdding
+                      ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      : <span className="material-symbols-outlined text-base">add</span>}
+                    Thêm
+                  </button>
+                </div>
+                {lessonAddError && <p className="text-red-500 text-xs">{lessonAddError}</p>}
+              </div>
+
               <button
-                onClick={modal === 'create' ? handleCreate : handleUpdate}
-                disabled={saving}
-                className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                onClick={() => {
+                  if (lessonDrafts.length > 0 && newCourseId) {
+                    setCourses(prev => prev.map(c => c.id === newCourseId ? { ...c, lessonCount: lessonDrafts.length } : c));
+                  }
+                  setModal(null);
+                }}
+                className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
-                {saving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                {modal === 'create' ? 'Tạo khoá học' : 'Lưu thay đổi'}
+                {lessonDrafts.length > 0 ? `Hoàn thành (${lessonDrafts.length} bài học)` : 'Bỏ qua'}
               </button>
             </div>
-          </div>
+          )}
         </Modal>
       )}
     </>
