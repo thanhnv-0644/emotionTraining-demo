@@ -61,6 +61,7 @@ public class AudioClipService {
                 .build();
 
         audioClipRepository.save(clip);
+        recalcLessonDuration(lesson);
         return toResponse(clip);
     }
 
@@ -84,6 +85,7 @@ public class AudioClipService {
         }
 
         audioClipRepository.save(clip);
+        recalcLessonDuration(clip.getLesson());
         return toResponse(clip);
     }
 
@@ -94,6 +96,17 @@ public class AudioClipService {
         clip.setDeletedAt(LocalDateTime.now());
         clip.setUpdatedAt(LocalDateTime.now());
         audioClipRepository.save(clip);
+        recalcLessonDuration(clip.getLesson());
+    }
+
+    private void recalcLessonDuration(Lesson lesson) {
+        int total = audioClipRepository.findByLessonIdAndDeletedAtIsNullOrderByOrder(lesson.getId())
+                .stream()
+                .mapToInt(c -> c.getDuration() != null ? c.getDuration() : 0)
+                .sum();
+        lesson.setDuration(total);
+        lesson.setUpdatedAt(LocalDateTime.now());
+        lessonRepository.save(lesson);
     }
 
     private AudioClipResponse toResponse(AudioClip clip) {
