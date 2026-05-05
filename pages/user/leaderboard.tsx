@@ -3,6 +3,9 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import UserLayout from '@/components/UserLayout';
 import AppPageHeader from '@/components/AppPageHeader';
+import Pagination from '@/components/Pagination';
+
+const REST_PAGE_SIZE = 10;
 
 interface LeaderboardEntry {
   rank: number;
@@ -26,10 +29,11 @@ export default function Leaderboard() {
   const [myRank, setMyRank] = useState<number | null>(null);
   const [myEntry, setMyEntry] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [restPage, setRestPage] = useState(1);
 
   useEffect(() => {
     Promise.all([
-      api.get<LeaderboardEntry[]>('/api/leaderboard?limit=20'),
+      api.get<LeaderboardEntry[]>('/api/leaderboard?limit=50'),
       api.get<number>('/api/leaderboard/me'),
     ]).then(([list, rank]) => {
       const safeList = list ?? [];
@@ -42,6 +46,7 @@ export default function Leaderboard() {
 
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
+  const paginatedRest = rest.slice((restPage - 1) * REST_PAGE_SIZE, restPage * REST_PAGE_SIZE);
 
   return (
     <>
@@ -164,7 +169,7 @@ export default function Leaderboard() {
                   <span className="text-right">TB%</span>
                 </div>
                 <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                  {rest.map(entry => {
+                  {paginatedRest.map(entry => {
                     const isMe = entry.userId === user?.id;
                     return (
                       <div
@@ -200,6 +205,7 @@ export default function Leaderboard() {
                     );
                   })}
                 </div>
+                <Pagination page={restPage} total={rest.length} pageSize={REST_PAGE_SIZE} onChange={setRestPage} />
               </div>
             )}
           </>

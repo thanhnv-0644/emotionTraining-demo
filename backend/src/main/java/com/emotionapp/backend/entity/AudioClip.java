@@ -30,9 +30,8 @@ public class AudioClip {
     @Column(name = "duration")
     private Integer duration;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "targetEmotion")
-    private Emotion targetEmotion;
+    @Column(name = "emotions", columnDefinition = "TEXT")
+    private String emotions;
 
     @Column(name = "`order`")
     private Integer order;
@@ -46,7 +45,4 @@ public class AudioClip {
     @Column(name = "deletedAt")
     private LocalDateTime deletedAt;
 
-    public enum Emotion {
-        happiness, sadness, anger, fear, surprise, disgust, neutral
-    }
 }

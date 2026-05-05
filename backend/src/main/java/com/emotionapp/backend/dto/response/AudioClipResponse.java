@@ -15,6 +15,6 @@ public class AudioClipResponse {
     private String subject;
     private String audioUrl;
     private Integer duration;
-    private String targetEmotion;
+    private String emotions;
     private Integer order;
 }

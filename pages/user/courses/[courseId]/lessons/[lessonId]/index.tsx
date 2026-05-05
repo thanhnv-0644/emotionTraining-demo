@@ -9,7 +9,7 @@ interface AudioClipResponse {
   subject: string;
   audioUrl: string;
   duration: number;
-  targetEmotion: string;
+  emotions: string | null;
   order: number;
 }
 
@@ -73,7 +73,7 @@ export default function LessonSessionPage() {
       scenario: clip.subject,
       duration: formatDuration(clip.duration ?? 0),
       url: `${BASE_URL}${clip.audioUrl}`,
-      targetEmotion: clip.targetEmotion,
+      emotions: clip.emotions,
     }));
 
   return (

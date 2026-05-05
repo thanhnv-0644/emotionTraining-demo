@@ -7,5 +7,5 @@ public class CreateAudioClipRequest {
     private String subject;
     private String audioUrl;
     private Integer duration;
-    private String targetEmotion;
+    private String emotions;
 }

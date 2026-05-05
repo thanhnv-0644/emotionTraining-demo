@@ -33,6 +33,7 @@ import com.emotionapp.backend.service.LessonService;
 import com.emotionapp.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -91,6 +92,16 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("Course archived", null));
     }
 
+    @PostMapping(value = "/courses/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CourseResponse>> uploadCourseImage(
+            @PathVariable String id,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        String imageUrl = fileStorageService.saveCourseImage(file);
+        UpdateCourseRequest req = new UpdateCourseRequest();
+        req.setImage(imageUrl);
+        return ResponseEntity.ok(ApiResponse.success("Image uploaded", courseService.updateCourse(id, req)));
+    }
+
     // ── Lessons ───────────────────────────────────────────────────────────────
 
     @GetMapping("/courses/{courseId}/lessons")
@@ -132,13 +143,13 @@ public class AdminController {
             @PathVariable String lessonId,
             @RequestParam("file") MultipartFile file,
             @RequestParam("subject") String subject,
-            @RequestParam("targetEmotion") String targetEmotion,
+            @RequestParam(value = "emotions", required = false) String emotions,
             @RequestParam(value = "duration", required = false) Integer duration) throws IOException {
         String audioUrl = fileStorageService.saveFile(file);
         CreateAudioClipRequest request = new CreateAudioClipRequest();
         request.setSubject(subject);
         request.setAudioUrl(audioUrl);
-        request.setTargetEmotion(targetEmotion);
+        request.setEmotions(emotions);
         request.setDuration(duration);
         return ResponseEntity.ok(ApiResponse.success("Audio clip created", audioClipService.createClip(lessonId, request)));
     }

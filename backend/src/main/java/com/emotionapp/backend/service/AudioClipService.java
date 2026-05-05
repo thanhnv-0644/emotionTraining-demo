@@ -36,15 +36,6 @@ public class AudioClipService {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Lesson not found"));
 
-        AudioClip.Emotion emotion = null;
-        if (request.getTargetEmotion() != null) {
-            try {
-                emotion = AudioClip.Emotion.valueOf(request.getTargetEmotion());
-            } catch (IllegalArgumentException e) {
-                throw new AppException(HttpStatus.BAD_REQUEST, "Invalid emotion: " + request.getTargetEmotion());
-            }
-        }
-
         int nextOrder = audioClipRepository.countByLessonIdAndDeletedAtIsNull(lessonId) + 1;
         LocalDateTime now = LocalDateTime.now();
 
@@ -54,7 +45,7 @@ public class AudioClipService {
                 .subject(request.getSubject())
                 .audioUrl(request.getAudioUrl())
                 .duration(request.getDuration())
-                .targetEmotion(emotion)
+                .emotions(request.getEmotions())
                 .order(nextOrder)
                 .createdAt(now)
                 .updatedAt(now)
@@ -73,16 +64,9 @@ public class AudioClipService {
         if (request.getSubject() != null) clip.setSubject(request.getSubject());
         if (request.getAudioUrl() != null) clip.setAudioUrl(request.getAudioUrl());
         if (request.getDuration() != null) clip.setDuration(request.getDuration());
+        if (request.getEmotions() != null) clip.setEmotions(request.getEmotions());
         clip.setOrder(request.getOrder());
         clip.setUpdatedAt(LocalDateTime.now());
-
-        if (request.getTargetEmotion() != null) {
-            try {
-                clip.setTargetEmotion(AudioClip.Emotion.valueOf(request.getTargetEmotion()));
-            } catch (IllegalArgumentException e) {
-                throw new AppException(HttpStatus.BAD_REQUEST, "Invalid emotion: " + request.getTargetEmotion());
-            }
-        }
 
         audioClipRepository.save(clip);
         recalcLessonDuration(clip.getLesson());
@@ -116,7 +100,7 @@ public class AudioClipService {
                 .subject(clip.getSubject())
                 .audioUrl(clip.getAudioUrl())
                 .duration(clip.getDuration())
-                .targetEmotion(clip.getTargetEmotion() != null ? clip.getTargetEmotion().name() : null)
+                .emotions(clip.getEmotions())
                 .order(clip.getOrder())
                 .build();
     }

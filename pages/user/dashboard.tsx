@@ -44,12 +44,12 @@ const LEVEL_CONFIG: Record<string, { label: string; color: string }> = {
 
 const EMOTION_COLORS: Record<string, string> = {
   happiness: 'bg-yellow-400', sadness: 'bg-blue-400', anger: 'bg-red-400',
-  surprise: 'bg-purple-400', fear: 'bg-indigo-400', disgust: 'bg-green-400', neutral: 'bg-slate-400',
+  surprise: 'bg-purple-400', fear: 'bg-indigo-400', neutral: 'bg-slate-400',
 };
 
 const EMOTION_LABELS: Record<string, string> = {
   happiness: 'Hạnh phúc', sadness: 'Buồn bã', anger: 'Tức giận',
-  surprise: 'Ngạc nhiên', fear: 'Sợ hãi', disgust: 'Ghê tởm', neutral: 'Bình thản',
+  surprise: 'Ngạc nhiên', fear: 'Sợ hãi', neutral: 'Bình thản',
 };
 
 const XP_LEVELS = [

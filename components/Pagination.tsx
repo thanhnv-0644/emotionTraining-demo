@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface PaginationProps {
   page: number;
   total: number;
@@ -7,14 +9,15 @@ interface PaginationProps {
 
 export default function Pagination({ page, total, pageSize, onChange }: PaginationProps) {
   const totalPages = Math.ceil(total / pageSize);
+  const [jumpInput, setJumpInput] = useState('');
+
   if (totalPages <= 1) return null;
 
   const from = (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
 
-  // Build page number list with ellipsis
   const pages: (number | '...')[] = [];
-  if (totalPages <= 7) {
+  if (totalPages <= 5) {
     for (let i = 1; i <= totalPages; i++) pages.push(i);
   } else {
     pages.push(1);
@@ -22,6 +25,13 @@ export default function Pagination({ page, total, pageSize, onChange }: Paginati
     for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
     if (page < totalPages - 2) pages.push('...');
     pages.push(totalPages);
+  }
+
+  function handleJump(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return;
+    const n = parseInt(jumpInput);
+    if (!isNaN(n) && n >= 1 && n <= totalPages) onChange(n);
+    setJumpInput('');
   }
 
   const btn = (label: React.ReactNode, target: number, disabled: boolean, active = false) => (
@@ -42,15 +52,14 @@ export default function Pagination({ page, total, pageSize, onChange }: Paginati
   );
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex-wrap gap-2">
       <span className="text-sm text-slate-500">
         {from}–{to} / <span className="font-semibold text-slate-700 dark:text-slate-300">{total}</span>
       </span>
       <div className="flex items-center gap-1">
         {btn(
           <span className="material-symbols-outlined text-base leading-none">chevron_left</span>,
-          page - 1,
-          page === 1
+          page - 1, page === 1
         )}
         {pages.map((p, i) =>
           p === '...'
@@ -59,10 +68,24 @@ export default function Pagination({ page, total, pageSize, onChange }: Paginati
         )}
         {btn(
           <span className="material-symbols-outlined text-base leading-none">chevron_right</span>,
-          page + 1,
-          page === totalPages
+          page + 1, page === totalPages
         )}
       </div>
+      {totalPages > 5 && (
+        <div className="flex items-center gap-1.5 text-sm text-slate-500">
+          <span>Đến trang</span>
+          <input
+            type="number"
+            min={1}
+            max={totalPages}
+            value={jumpInput}
+            onChange={e => setJumpInput(e.target.value)}
+            onKeyDown={handleJump}
+            placeholder={String(page)}
+            className="w-14 h-8 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-center outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          />
+        </div>
+      )}
     </div>
   );
 }

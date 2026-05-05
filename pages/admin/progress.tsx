@@ -36,7 +36,7 @@ interface UserOption { id: string; name: string; email: string; }
 
 const EMOTION_VI: Record<string, string> = {
   happiness: 'Hạnh phúc', sadness: 'Buồn bã', anger: 'Tức giận',
-  surprise: 'Ngạc nhiên', fear: 'Sợ hãi', disgust: 'Ghê tởm', neutral: 'Bình thản',
+  surprise: 'Ngạc nhiên', fear: 'Sợ hãi', neutral: 'Bình thản',
 };
 
 function ScoreBadge({ score }: { score: number }) {

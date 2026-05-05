@@ -165,7 +165,7 @@ public class LessonService {
                 .subject(clip.getSubject())
                 .audioUrl(clip.getAudioUrl())
                 .duration(clip.getDuration())
-                .targetEmotion(clip.getTargetEmotion() != null ? clip.getTargetEmotion().name() : null)
+                .emotions(clip.getEmotions())
                 .order(clip.getOrder())
                 .build();
     }

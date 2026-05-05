@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useEffect, useState, ReactNode } from 'react';
+import { useEffect, useRef, useState, ReactNode } from 'react';
 import { api, BASE_URL } from '@/lib/api';
 import AdminLayout from '@/components/AdminLayout';
 import AppPageHeader from '@/components/AppPageHeader';
@@ -98,6 +98,11 @@ export default function AdminCourses() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
+  // Image upload
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   // Lesson drafts (for step 2 of create)
   const [lessonDrafts, setLessonDrafts] = useState<LessonDraft[]>([]);
   const [lessonInput, setLessonInput] = useState({ title: '', level: 'beginner' });
@@ -137,6 +142,8 @@ export default function AdminCourses() {
     setLessonDrafts([]);
     setLessonInput({ title: '', level: 'beginner' });
     setLessonAddError('');
+    setImageFile(null);
+    setImagePreview(null);
     setModal('create');
   };
 
@@ -150,6 +157,8 @@ export default function AdminCourses() {
     });
     setEditId(course.id);
     setFormError('');
+    setImageFile(null);
+    setImagePreview(course.image ? `${BASE_URL}${course.image}` : null);
     setModal('edit');
   };
 
@@ -157,12 +166,23 @@ export default function AdminCourses() {
     if (!form.title.trim()) { setFormError('Vui lòng nhập tên khoá học'); return; }
     setSaving(true); setFormError('');
     try {
-      const created = await api.post<CourseResponse>('/api/admin/courses', {
+      let created = await api.post<CourseResponse>('/api/admin/courses', {
         title: form.title,
         description: form.description,
         category: form.category,
         price: parseInt(form.price) || 0,
       });
+      if (imageFile) {
+        const fd = new FormData();
+        fd.append('file', imageFile);
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+        const res = await fetch(`${BASE_URL}/api/admin/courses/${created.id}/image`, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: fd,
+        });
+        if (res.ok) created = (await res.json()).data;
+      }
       setCourses(prev => [...prev, created]);
       setNewCourseId(created.id);
       setCreateStep('lessons');
@@ -193,13 +213,24 @@ export default function AdminCourses() {
     if (!editId) return;
     setSaving(true); setFormError('');
     try {
-      const updated = await api.put<CourseResponse>(`/api/admin/courses/${editId}`, {
+      let updated = await api.put<CourseResponse>(`/api/admin/courses/${editId}`, {
         title: form.title,
         description: form.description,
         category: form.category,
         price: parseInt(form.price) || 0,
         status: form.status,
       });
+      if (imageFile) {
+        const fd = new FormData();
+        fd.append('file', imageFile);
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+        const res = await fetch(`${BASE_URL}/api/admin/courses/${editId}/image`, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: fd,
+        });
+        if (res.ok) updated = (await res.json()).data;
+      }
       setCourses(prev => prev.map(c => c.id === editId ? updated : c));
       setModal(null);
     } catch (e: unknown) {
@@ -399,6 +430,35 @@ export default function AdminCourses() {
           {/* ── Step 1: Course info ── */}
           {(modal === 'edit' || createStep === 'course') && (
             <div className="space-y-4">
+              {/* Image picker */}
+              <input ref={imageInputRef} type="file" accept="image/*" className="hidden"
+                onChange={e => {
+                  const file = e.target.files?.[0] ?? null;
+                  setImageFile(file);
+                  setImagePreview(file ? URL.createObjectURL(file) : (modal === 'edit' && editId ? imagePreview : null));
+                }} />
+              <div
+                onClick={() => imageInputRef.current?.click()}
+                className={`relative w-full h-36 rounded-xl border-2 border-dashed cursor-pointer overflow-hidden transition-colors ${imagePreview ? 'border-primary/40' : 'border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5'}`}
+              >
+                {imagePreview ? (
+                  <>
+                    <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <span className="text-white text-sm font-semibold flex items-center gap-1">
+                        <span className="material-symbols-outlined text-base">photo_camera</span>
+                        Đổi ảnh
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-2">
+                    <span className="material-symbols-outlined text-3xl text-slate-300">add_photo_alternate</span>
+                    <p className="text-sm text-slate-400">Chọn ảnh thumbnail <span className="text-primary">(tuỳ chọn)</span></p>
+                  </div>
+                )}
+              </div>
+
               <Field label="Tên khoá học *">
                 <input className={inputCls} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="VD: Nhận diện cảm xúc cơ bản" />
               </Field>

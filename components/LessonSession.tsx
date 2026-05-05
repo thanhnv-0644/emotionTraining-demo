@@ -11,7 +11,12 @@ interface AudioClip {
   scenario: string;
   duration: string;
   url?: string;
-  targetEmotion?: string;
+  emotions?: string | null;
+}
+
+function parseEmotionKeys(json?: string | null): string[] {
+  if (!json) return [];
+  try { return Object.keys(JSON.parse(json)); } catch { return []; }
 }
 
 interface LessonSessionProps {
@@ -27,7 +32,6 @@ const EMOTIONS = [
   { id: "anger", label: "Tức giận", icon: "mode_heat", color: "red" },
   { id: "fear", label: "Sợ hãi", icon: "ac_unit", color: "purple" },
   { id: "surprise", label: "Ngạc nhiên", icon: "priority_high", color: "orange" },
-  { id: "disgust", label: "Ghê tởm", icon: "sick", color: "green" },
   { id: "neutral", label: "Bình thản", icon: "sentiment_neutral", color: "slate" },
 ];
 
@@ -37,8 +41,16 @@ const EMOTION_COLORS: Record<string, string> = {
   red: "bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400",
   purple: "bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400",
   orange: "bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400",
-  green: "bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400",
   slate: "bg-slate-100 dark:bg-slate-500/10 text-slate-600 dark:text-slate-400",
+};
+
+const EMOTION_SELECTED: Record<string, string> = {
+  yellow: "border-yellow-400 bg-yellow-50 dark:bg-yellow-500/10 ring-2 ring-yellow-300 dark:ring-yellow-500/40",
+  blue:   "border-blue-400 bg-blue-50 dark:bg-blue-500/10 ring-2 ring-blue-300 dark:ring-blue-500/40",
+  red:    "border-red-400 bg-red-50 dark:bg-red-500/10 ring-2 ring-red-300 dark:ring-red-500/40",
+  purple: "border-purple-400 bg-purple-50 dark:bg-purple-500/10 ring-2 ring-purple-300 dark:ring-purple-500/40",
+  orange: "border-orange-400 bg-orange-50 dark:bg-orange-500/10 ring-2 ring-orange-300 dark:ring-orange-500/40",
+  slate:  "border-slate-400 bg-slate-50 dark:bg-slate-500/10 ring-2 ring-slate-300 dark:ring-slate-500/40",
 };
 
 function getEmotionColor(emotionId: string): string {
@@ -56,7 +68,7 @@ export default function LessonSession({
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [currentClipIndex, setCurrentClipIndex] = useState(0);
-  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
+  const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackTime, setPlaybackTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -107,23 +119,36 @@ export default function LessonSession({
     setIsPlaying(!isPlaying);
   };
 
-  const handleNext = async () => {
-    if (!selectedEmotion) return;
+  const toggleEmotion = (id: string) => {
+    setSelectedEmotions(prev =>
+      prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
+    );
+  };
 
-    const newAnswers = [...answers, { audioClipId: currentClip.id, selectedEmotion }];
+  const handleNext = async () => {
+    if (selectedEmotions.length === 0) return;
+
+    // Push one answer entry per selected emotion for the current clip
+    const clipAnswers = selectedEmotions.map(e => ({ audioClipId: currentClip.id, selectedEmotion: e }));
+    const newAnswers = [...answers, ...clipAnswers];
     setAnswers(newAnswers);
 
     if (isLastClip) {
       setIsSubmitting(true);
 
-      // Build result data
-      const resultAnswers = audioClips.map((clip, i) => {
-        const ans = newAnswers[i];
-        const isCorrect = ans?.selectedEmotion === clip.targetEmotion;
+      // Build result data — group by clip
+      const resultAnswers = audioClips.map((clip) => {
+        const userSelections = newAnswers
+          .filter(a => a.audioClipId === clip.id)
+          .map(a => a.selectedEmotion);
+        const validEmotions = parseEmotionKeys(clip.emotions);
+        const isCorrect =
+          userSelections.length === validEmotions.length &&
+          userSelections.every(e => validEmotions.includes(e));
         return {
           question: clip.subject,
-          selected: ans?.selectedEmotion ?? '',
-          correct: clip.targetEmotion ?? '',
+          selected: userSelections.join('+'),
+          correct: validEmotions.join(','),
           status: isCorrect ? 'correct' as const : 'incorrect' as const,
         };
       });
@@ -151,14 +176,14 @@ export default function LessonSession({
       router.push(`/user/courses/${courseId}/lessons/${lessonId}/result`);
     } else {
       setCurrentClipIndex(currentClipIndex + 1);
-      setSelectedEmotion(null);
+      setSelectedEmotions([]);
     }
   };
 
   const handlePrevious = () => {
     if (currentClipIndex > 0) {
       setCurrentClipIndex(currentClipIndex - 1);
-      setSelectedEmotion(null);
+      setSelectedEmotions([]);
     }
   };
 
@@ -326,10 +351,10 @@ export default function LessonSession({
               {EMOTIONS.map((emotion) => (
                 <button
                   key={emotion.id}
-                  onClick={() => setSelectedEmotion(emotion.id)}
+                  onClick={() => toggleEmotion(emotion.id)}
                   className={`group flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
-                    selectedEmotion === emotion.id
-                      ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+                    selectedEmotions.includes(emotion.id)
+                      ? EMOTION_SELECTED[emotion.color]
                       : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-primary hover:bg-primary/5"
                   }`}
                 >
@@ -354,7 +379,7 @@ export default function LessonSession({
             </button>
             <button
               onClick={handleNext}
-              disabled={!selectedEmotion || isSubmitting}
+              disabled={selectedEmotions.length === 0 || isSubmitting}
               className="flex items-center gap-2 px-10 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
