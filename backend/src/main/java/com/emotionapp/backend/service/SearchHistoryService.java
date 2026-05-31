@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SearchHistoryService {
 
     private final SearchHistoryRepository searchHistoryRepository;

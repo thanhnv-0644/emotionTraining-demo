@@ -23,13 +23,14 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class EnrollmentService {
+public class EnrollmentServiceImpl implements IEnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final LessonRepository lessonRepository;
 
+    @Override
     @Transactional
     public CourseResponse enrollFree(String userId, String courseId) {
         Course course = courseRepository.findById(courseId)
@@ -62,6 +63,7 @@ public class EnrollmentService {
         return toCourseResponse(course, userId);
     }
 
+    @Override
     public List<CourseResponse> getMyEnrollments(String userId) {
         return enrollmentRepository.findByUserId(userId)
                 .stream()
@@ -70,8 +72,7 @@ public class EnrollmentService {
                 .collect(Collectors.toList());
     }
 
-    // ─── Admin APIs ───────────────────────────────────────────────────────────
-
+    @Override
     public List<EnrollmentResponse> adminGetAllEnrollments(String userId, String courseId) {
         List<Enrollment> enrollments;
         if (userId != null) {
@@ -84,6 +85,7 @@ public class EnrollmentService {
         return enrollments.stream().map(this::toEnrollmentResponse).collect(Collectors.toList());
     }
 
+    @Override
     @Transactional
     public EnrollmentResponse adminEnroll(AdminEnrollRequest request) {
         String userId   = request.getUserId();
@@ -115,6 +117,7 @@ public class EnrollmentService {
         return toEnrollmentResponse(enrollment);
     }
 
+    @Override
     @Transactional
     public void adminRevokeEnrollment(String enrollmentId) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
