@@ -11,6 +11,7 @@ import java.util.List;
 @Repository
 public interface UserProgressRepository extends JpaRepository<UserProgress, String> {
     List<UserProgress> findByUserIdAndLessonId(String userId, String lessonId);
+    long countByUserIdAndLessonId(String userId, String lessonId);
     List<UserProgress> findByUserId(String userId);
     List<UserProgress> findByCompletedAtBetween(LocalDateTime from, LocalDateTime to);
     List<UserProgress> findByCompletedAtIsNotNull();

@@ -19,18 +19,19 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
-public class UserService {
+public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Override
     public UserResponse getMe(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
         return toResponse(user);
     }
 
+    @Override
     public List<UserResponse> getAllUsers() {
         return userRepository.findByDeletedAtIsNull()
                 .stream()
@@ -38,6 +39,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional
     public void deleteUser(String userId) {
         User user = userRepository.findById(userId)
@@ -51,6 +53,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Override
     @Transactional
     public UserResponse adminUpdateUser(String userId, AdminUpdateUserRequest request) {
         User user = userRepository.findById(userId)
@@ -76,7 +79,6 @@ public class UserService {
                 throw new AppException(HttpStatus.BAD_REQUEST, "Invalid status: " + request.getStatus());
             }
             user.setStatus(newStatus);
-            // Khôi phục tài khoản đã bị xoá mềm khi admin set active
             if (newStatus == User.Status.active) {
                 user.setDeletedAt(null);
             }
@@ -94,6 +96,7 @@ public class UserService {
         return toResponse(user);
     }
 
+    @Override
     @Transactional
     public void changePassword(String userId, ChangePasswordRequest request) {
         User user = userRepository.findById(userId)
@@ -109,6 +112,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Override
     @Transactional
     public UserResponse updateProfile(String userId, UpdateProfileRequest request) {
         User user = userRepository.findById(userId)
@@ -121,9 +125,24 @@ public class UserService {
             user.setAvatar(request.getAvatar());
         }
         user.setUpdatedAt(LocalDateTime.now());
-
         userRepository.save(user);
         return toResponse(user);
+    }
+
+    @Override
+    public User getUserEntityById(String userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+
+    @Override
+    @Transactional
+    public void addXp(String userId, int xpGain) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+        user.setXp((user.getXp() == null ? 0 : user.getXp()) + xpGain);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     private UserResponse toResponse(User user) {

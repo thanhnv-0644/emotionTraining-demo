@@ -6,6 +6,7 @@ import com.emotionapp.backend.repository.UserProgressRepository;
 import com.emotionapp.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.Optional;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LeaderboardService {
 
     private final UserRepository userRepository;

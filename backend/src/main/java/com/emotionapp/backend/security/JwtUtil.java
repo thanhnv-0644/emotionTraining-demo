@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
-public class JwtUtil {
+public class JwtUtil implements IJwtService {
 
     @Value("${jwt.secret}")
     private String secret;

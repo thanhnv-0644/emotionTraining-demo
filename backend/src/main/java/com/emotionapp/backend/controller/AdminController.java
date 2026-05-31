@@ -46,6 +46,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -224,6 +226,7 @@ public class AdminController {
     // ── Payments ──────────────────────────────────────────────────────────────
 
     @GetMapping("/payments")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<PaymentResponse>>> getAllPayments(
             @RequestParam(required = false) String status) {
         List<Payment> payments = status != null
@@ -251,6 +254,7 @@ public class AdminController {
     // ── User Progress ─────────────────────────────────────────────────────────
 
     @GetMapping("/progress")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<ProgressResponse>>> getAllProgress(
             @RequestParam(required = false) String userId) {
         List<UserProgress> progresses = userId != null
@@ -274,6 +278,7 @@ public class AdminController {
     // ── Reviews ───────────────────────────────────────────────────────────────
 
     @GetMapping("/reviews")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<ReviewResponse>>> getAllReviews(
             @RequestParam(required = false) String courseId) {
         List<Review> reviews = courseId != null
