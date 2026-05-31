@@ -244,7 +244,7 @@ public class AnalyticsService {
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private static final List<String> ALL_EMOTIONS =
-            List.of("happiness", "sadness", "anger", "fear", "surprise", "disgust", "neutral");
+            List.of("happiness", "sadness", "anger", "fear", "surprise", "neutral");
 
     private Map<String, Double> calcEmotionAccuracyPercent(List<UserProgress> progresses) {
         Map<String, int[]> stats = new HashMap<>();

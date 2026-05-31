@@ -8,7 +8,6 @@ const EMOTION_VI: Record<string, string> = {
   anger: "Tức giận",
   surprise: "Ngạc nhiên",
   fear: "Sợ hãi",
-  disgust: "Ghê tởm",
   neutral: "Bình thản",
 };
 
@@ -47,10 +46,11 @@ export default function LessonResult({
 
   const incorrectAnswers = totalQuestions - correctAnswers;
 
-  // Compute per-emotion accuracy from actual answers
+  // Compute per-emotion accuracy — group by first valid correct emotion
   const emotionStats: Record<string, { correct: number; total: number }> = {};
   for (const item of answers) {
-    const key = item.correct;
+    const key = item.correct.split(',')[0] ?? item.correct;
+    if (!key) continue;
     if (!emotionStats[key]) emotionStats[key] = { correct: 0, total: 0 };
     emotionStats[key].total++;
     if (item.status === 'correct') emotionStats[key].correct++;
@@ -179,7 +179,7 @@ export default function LessonResult({
                         {item.question}
                       </p>
                       <p className="text-xs text-slate-600 dark:text-slate-400">
-                        Bạn chọn: <span className="font-bold">{emotionLabel(item.selected)}</span>
+                        Bạn chọn: <span className="font-bold">{item.selected.split('+').map(emotionLabel).join(' + ')}</span>
                       </p>
                     </div>
                   </div>
@@ -188,7 +188,9 @@ export default function LessonResult({
                       ? "bg-green-200 dark:bg-green-500/30 text-green-700 dark:text-green-400"
                       : "bg-red-200 dark:bg-red-500/30 text-red-700 dark:text-red-400"
                   }`}>
-                    {item.status === "correct" ? "Đúng" : `Đáp án: ${emotionLabel(item.correct)}`}
+                    {item.status === "correct"
+                      ? "Đúng"
+                      : `Đáp án: ${item.correct.split(',').map(emotionLabel).join(' / ')}`}
                   </span>
                 </div>
               ))

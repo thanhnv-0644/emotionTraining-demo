@@ -38,7 +38,7 @@ interface AudioClipResponse {
   subject: string;
   audioUrl: string;
   duration: number;
-  targetEmotion: string;
+  emotions: string | null; // JSON: {"happiness":0.72,"neutral":0.12}
   order: number;
 }
 
@@ -49,11 +49,12 @@ interface AiResult {
   scores: Record<string, number>;
   subject: string;
   file: File;
+  selectedEmotions: Record<string, number>; // pct 0-100, emotions to save
 }
 
 const EMOTION_VI: Record<string, string> = {
   happiness: "Hạnh phúc", sadness: "Buồn bã", anger: "Tức giận",
-  surprise: "Ngạc nhiên", fear: "Sợ hãi", disgust: "Ghê tởm", neutral: "Bình thản",
+  surprise: "Ngạc nhiên", fear: "Sợ hãi", neutral: "Bình thản",
 };
 
 const EMOTION_COLORS: Record<string, { bg: string; text: string }> = {
@@ -63,7 +64,6 @@ const EMOTION_COLORS: Record<string, { bg: string; text: string }> = {
   neutral:   { bg: "bg-slate-100 dark:bg-slate-800",    text: "text-slate-700 dark:text-slate-300" },
   surprise:  { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400" },
   fear:      { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-400" },
-  disgust:   { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400" },
 };
 
 const EMOTIONS = Object.keys(EMOTION_COLORS);
@@ -75,6 +75,33 @@ const LEVEL_CONFIG: Record<string, { label: string; bg: string; text: string; do
   advanced:     { label: "Nâng cao",  bg: "bg-red-100 dark:bg-red-900/30",        text: "text-red-700 dark:text-red-400",        dot: "bg-red-500"     },
 };
 
+// Parse emotions JSON (decimal 0-1) → percentage map (0-100)
+function parseEmotions(json: string | null): Record<string, number> {
+  if (!json) return {};
+  try {
+    const map = JSON.parse(json) as Record<string, number>;
+    return Object.fromEntries(
+      Object.entries(map).map(([k, v]) => [k, Math.round(v * 100)])
+    );
+  } catch { return {}; }
+}
+
+// Convert percentage map → JSON string with decimal values (for AI mode)
+function emotionsToJson(map: Record<string, number>): string {
+  const obj: Record<string, number> = {};
+  Object.entries(map).forEach(([k, v]) => {
+    if (v > 0) obj[k] = parseFloat((v / 100).toFixed(2));
+  });
+  return JSON.stringify(obj);
+}
+
+// Convert string set → JSON string with equal weights (for manual mode)
+function emotionSetToJson(set: string[]): string {
+  if (set.length === 0) return "{}";
+  const weight = parseFloat((1 / set.length).toFixed(2));
+  return JSON.stringify(Object.fromEntries(set.map(k => [k, weight])));
+}
+
 function LevelBadge({ level }: { level: string }) {
   const cfg = LEVEL_CONFIG[level] ?? { label: level, bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-600 dark:text-slate-400", dot: "bg-slate-400" };
   return (
@@ -82,6 +109,114 @@ function LevelBadge({ level }: { level: string }) {
       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
       {cfg.label}
     </span>
+  );
+}
+
+// Horizontal toggle buttons for manual mode (no percentage)
+function EmotionToggleGroup({
+  value, onChange,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const toggle = (emo: string) =>
+    onChange(value.includes(emo) ? value.filter(e => e !== emo) : [...value, emo]);
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        {EMOTIONS.map(emo => {
+          const selected = value.includes(emo);
+          const col = EMOTION_COLORS[emo];
+          return (
+            <button
+              key={emo}
+              type="button"
+              onClick={() => toggle(emo)}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition-all border-2 ${
+                selected
+                  ? `${col.bg} ${col.text} border-current shadow-sm`
+                  : "bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-transparent hover:border-slate-300 dark:hover:border-slate-600"
+              }`}
+            >
+              {selected && <span className="material-symbols-outlined text-[12px]">check</span>}
+              {EMOTION_VI[emo]}
+            </button>
+          );
+        })}
+      </div>
+      {value.length === 0 && (
+        <p className="text-xs text-red-500">Chọn ít nhất 1 cảm xúc</p>
+      )}
+    </div>
+  );
+}
+
+// Percentage picker for AI mode (with % inputs)
+function EmotionPicker({
+  value, onChange,
+}: {
+  value: Record<string, number>; // pct 0-100
+  onChange: (v: Record<string, number>) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      {EMOTIONS.map(emo => {
+        const checked = emo in value && value[emo] > 0;
+        const pct = value[emo] ?? 0;
+        const col = EMOTION_COLORS[emo];
+        return (
+          <div key={emo} className="flex items-center gap-3">
+            <label className="flex items-center gap-2 flex-1 cursor-pointer min-w-0">
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={e => {
+                  if (e.target.checked) onChange({ ...value, [emo]: 50 });
+                  else { const next = { ...value }; delete next[emo]; onChange(next); }
+                }}
+                className="accent-primary w-4 h-4 flex-shrink-0"
+              />
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${col.bg} ${col.text}`}>
+                {EMOTION_VI[emo]}
+              </span>
+            </label>
+            {checked && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <input
+                  type="number" min="1" max="100" value={pct}
+                  onChange={e => onChange({ ...value, [emo]: Math.max(1, Math.min(100, Number(e.target.value))) })}
+                  className="w-16 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 text-xs bg-slate-50 dark:bg-slate-800 text-center"
+                />
+                <span className="text-xs text-slate-500">%</span>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {Object.keys(value).length === 0 && (
+        <p className="text-xs text-red-500">Chọn ít nhất 1 cảm xúc</p>
+      )}
+    </div>
+  );
+}
+
+// Display emotion badges from JSON string (hides % for manual 1.0 values)
+function EmotionBadges({ emotions }: { emotions: string | null }) {
+  const map = parseEmotions(emotions);
+  const entries = Object.entries(map).sort((a, b) => b[1] - a[1]);
+  if (entries.length === 0) return <span className="text-xs text-slate-400">—</span>;
+  const showPct = entries.some(([, pct]) => pct < 100);
+  return (
+    <div className="flex flex-wrap gap-1">
+      {entries.map(([emo, pct]) => {
+        const col = EMOTION_COLORS[emo] ?? EMOTION_COLORS.neutral;
+        return (
+          <span key={emo} className={`px-2 py-0.5 rounded-full text-xs font-bold ${col.bg} ${col.text}`}>
+            {EMOTION_VI[emo] ?? emo}{showPct ? ` ${pct}%` : ""}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
@@ -105,14 +240,14 @@ function formatDuration(seconds: number): string {
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
           <h2 className="font-bold text-slate-900 dark:text-white">{title}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-y-auto">{children}</div>
       </div>
     </div>
   );
@@ -137,7 +272,7 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
 
   // Upload form
   const [uploadSubject, setUploadSubject] = useState("");
-  const [uploadEmotion, setUploadEmotion] = useState("happiness");
+  const [uploadEmotionSet, setUploadEmotionSet] = useState<string[]>(["happiness"]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -163,7 +298,7 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
 
   // Edit clip modal
   const [editClip, setEditClip] = useState<AudioClipResponse | null>(null);
-  const [editClipForm, setEditClipForm] = useState({ subject: "", targetEmotion: "happiness", order: "" });
+  const [editClipForm, setEditClipForm] = useState({ subject: "", emotionSet: [] as string[], order: "" });
   const [editClipSaving, setEditClipSaving] = useState(false);
   const [editClipError, setEditClipError] = useState("");
 
@@ -283,17 +418,24 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
   // ── Edit clip ──────────────────────────────────────────────────
   const openEditClip = (clip: AudioClipResponse) => {
     setEditClip(clip);
-    setEditClipForm({ subject: clip.subject, targetEmotion: clip.targetEmotion, order: String(clip.order) });
+    setEditClipForm({
+      subject: clip.subject,
+      emotionSet: Object.keys(parseEmotions(clip.emotions)),
+      order: String(clip.order),
+    });
     setEditClipError("");
   };
 
   const handleUpdateClip = async () => {
     if (!editClip) return;
+    if (editClipForm.emotionSet.length === 0) {
+      setEditClipError("Chọn ít nhất 1 cảm xúc"); return;
+    }
     setEditClipSaving(true); setEditClipError("");
     try {
       const updated = await api.put<AudioClipResponse>(`/api/admin/audio-clips/${editClip.id}`, {
         subject: editClipForm.subject,
-        targetEmotion: editClipForm.targetEmotion,
+        emotions: emotionSetToJson(editClipForm.emotionSet),
         order: parseInt(editClipForm.order) || editClip.order,
         audioUrl: editClip.audioUrl,
         duration: editClip.duration,
@@ -305,16 +447,16 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
     } finally { setEditClipSaving(false); }
   };
 
-  // ── Upload clip ────────────────────────────────────────────────
+  // ── Upload clip (manual) ───────────────────────────────────────
   const handleUpload = async (lessonId: string) => {
-    if (!uploadFile || !uploadSubject) return;
+    if (!uploadFile || !uploadSubject || uploadEmotionSet.length === 0) return;
     setUploading(true);
     try {
       const duration = await getAudioDuration(uploadFile);
       const formData = new FormData();
       formData.append("file", uploadFile);
       formData.append("subject", uploadSubject);
-      formData.append("targetEmotion", uploadEmotion);
+      formData.append("emotions", emotionSetToJson(uploadEmotionSet));
       formData.append("duration", String(duration));
       const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
       const res = await fetch(`${BASE_URL}/api/admin/lessons/${lessonId}/audio-clips`, {
@@ -332,6 +474,7 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
         return next;
       });
       setUploadSubject("");
+      setUploadEmotionSet(["happiness"]);
       setUploadFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
@@ -339,34 +482,49 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
     } finally { setUploading(false); }
   };
 
-  // ── AI predict ─────────────────────────────────────────────────
+  // ── AI predict (batch 5 files/request to avoid upload size limits) ────────
+  const AI_BATCH_SIZE = 5;
+
   const handleAiPredict = async () => {
     if (!aiFiles.length) return;
     setAiPredicting(true);
     setAiResults([]);
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const allPredictions: AiResult[] = [];
     try {
-      const formData = new FormData();
-      aiFiles.forEach(f => formData.append("files", f));
-      const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-      const res = await fetch(`${BASE_URL}/api/admin/ai/predict`, {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message ?? "AI service không khả dụng");
+      for (let i = 0; i < aiFiles.length; i += AI_BATCH_SIZE) {
+        const batch = aiFiles.slice(i, i + AI_BATCH_SIZE);
+        const formData = new FormData();
+        batch.forEach(f => formData.append("files", f));
+        const res = await fetch(`${BASE_URL}/api/admin/ai/predict`, {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.message ?? "AI service không khả dụng");
+        }
+        const json = await res.json();
+        const batchPredictions: AiResult[] = (json.data as any[]).map((p, j) => {
+          const selected: Record<string, number> = {};
+          Object.entries(p.scores as Record<string, number>).forEach(([emo, score]) => {
+            if (score > 0.10) selected[emo] = Math.round(score * 100);
+          });
+          return {
+            filename: p.filename,
+            emotion: p.emotion,
+            confidence: p.confidence,
+            scores: p.scores,
+            subject: p.filename.replace(/\.[^.]+$/, ""),
+            file: batch[j],
+            selectedEmotions: selected,
+          };
+        });
+        allPredictions.push(...batchPredictions);
+        // Show partial results progressively
+        setAiResults([...allPredictions]);
       }
-      const json = await res.json();
-      const predictions: AiResult[] = (json.data as any[]).map((p, i) => ({
-        filename: p.filename,
-        emotion: p.emotion,
-        confidence: p.confidence,
-        scores: p.scores,
-        subject: p.filename.replace(/\.[^.]+$/, ""),
-        file: aiFiles[i],
-      }));
-      setAiResults(predictions);
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : "Lỗi khi gọi AI");
     } finally { setAiPredicting(false); }
@@ -383,7 +541,7 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
         const formData = new FormData();
         formData.append("file", r.file);
         formData.append("subject", r.subject || r.filename);
-        formData.append("targetEmotion", r.emotion);
+        formData.append("emotions", emotionsToJson(r.selectedEmotions));
         formData.append("duration", String(duration));
         const res = await fetch(`${BASE_URL}/api/admin/lessons/${lessonId}/audio-clips`, {
           method: "POST",
@@ -595,13 +753,6 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                             <span className="text-xs text-slate-500">{formatDuration(lesson.duration)}</span>
                           </div>
                         </div>
-                        <span className={`px-2 py-1 rounded text-xs font-bold flex-shrink-0 ${
-                          lesson.status === "active"
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                        }`}>
-                          {lesson.status === "active" ? "Hoạt động" : lesson.status}
-                        </span>
                       </button>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button
@@ -645,13 +796,6 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                   <span className="text-xs text-slate-500">{clips.length} clip</span>
                 </div>
               </div>
-              <span className={`px-2.5 py-1 rounded-full text-xs font-bold flex-shrink-0 ${
-                selectedLesson.status === "active"
-                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-              }`}>
-                {selectedLesson.status === "active" ? "Hoạt động" : selectedLesson.status}
-              </span>
             </div>
 
             {/* Upload form */}
@@ -707,20 +851,19 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                       </>
                     )}
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Tên / Chủ đề clip *</label>
-                      <input type="text" placeholder="VD: Người phụ nữ đang khóc" value={uploadSubject}
-                        onChange={e => setUploadSubject(e.target.value)} className={inputCls} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Cảm xúc mục tiêu *</label>
-                      <select value={uploadEmotion} onChange={e => setUploadEmotion(e.target.value)} className={inputCls}>
-                        {EMOTIONS.map(e => <option key={e} value={e}>{EMOTION_VI[e] ?? e}</option>)}
-                      </select>
-                    </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Tên / Chủ đề clip *</label>
+                    <input type="text" placeholder="VD: Người phụ nữ đang khóc" value={uploadSubject}
+                      onChange={e => setUploadSubject(e.target.value)} className={inputCls} />
                   </div>
-                  <button onClick={() => handleUpload(selectedLesson.id)} disabled={uploading || !uploadFile || !uploadSubject}
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      Cảm xúc có trong clip *
+                    </label>
+                    <EmotionToggleGroup value={uploadEmotionSet} onChange={setUploadEmotionSet} />
+                  </div>
+                  <button onClick={() => handleUpload(selectedLesson.id)}
+                    disabled={uploading || !uploadFile || !uploadSubject || uploadEmotionSet.length === 0}
                     className="w-full py-2.5 bg-primary text-white rounded-lg text-sm font-bold disabled:opacity-40 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
                     {uploading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Đang upload...</> : <><span className="material-symbols-outlined text-base">cloud_upload</span>Tải lên</>}
                   </button>
@@ -730,8 +873,6 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
               {/* ── AI mode ── */}
               {uploadMode === 'ai' && (
                 <div className="p-6 space-y-4">
-                  {/* Multi-file drop zone */}
-                  {/* Hidden input — luôn append */}
                   <input ref={aiFileInputRef} type="file" accept="audio/*" multiple className="hidden"
                     onChange={e => {
                       const newFiles = Array.from(e.target.files ?? []);
@@ -800,7 +941,7 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                   {/* Results preview */}
                   {aiResults.length > 0 && (
                     <div className="space-y-3">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kết quả — chỉnh sửa trước khi lưu</p>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kết quả — chỉnh sửa cảm xúc trước khi lưu</p>
                       {aiResults.map((r, i) => (
                         <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
                           <div className="flex items-center gap-2">
@@ -814,33 +955,37 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                               {(r.confidence * 100).toFixed(0)}%
                             </span>
                           </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <label className="text-xs text-slate-500">Chủ đề</label>
-                              <input type="text" value={r.subject}
-                                onChange={e => setAiResults(prev => prev.map((x, j) => j === i ? { ...x, subject: e.target.value } : x))}
-                                className={inputCls} />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-xs text-slate-500">Cảm xúc AI dự đoán</label>
-                              <select value={r.emotion}
-                                onChange={e => setAiResults(prev => prev.map((x, j) => j === i ? { ...x, emotion: e.target.value } : x))}
-                                className={inputCls}>
-                                {EMOTIONS.map(e => <option key={e} value={e}>{EMOTION_VI[e] ?? e}</option>)}
-                              </select>
-                            </div>
-                          </div>
-                          {/* Confidence bars */}
                           <div className="space-y-1">
-                            {Object.entries(r.scores).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([emo, score]) => (
+                            <label className="text-xs text-slate-500">Chủ đề</label>
+                            <input type="text" value={r.subject}
+                              onChange={e => setAiResults(prev => prev.map((x, j) => j === i ? { ...x, subject: e.target.value } : x))}
+                              className={inputCls} />
+                          </div>
+                          {/* All scores as bars */}
+                          <div className="space-y-1">
+                            <p className="text-xs text-slate-500">Điểm AI (tất cả cảm xúc)</p>
+                            {Object.entries(r.scores).sort((a, b) => b[1] - a[1]).map(([emo, score]) => (
                               <div key={emo} className="flex items-center gap-2">
                                 <span className="text-xs text-slate-500 w-20 shrink-0">{EMOTION_VI[emo] ?? emo}</span>
                                 <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${score * 100}%` }} />
+                                  <div className="h-full bg-primary rounded-full" style={{ width: `${score * 100}%` }} />
                                 </div>
                                 <span className="text-xs text-slate-400 w-9 text-right">{(score * 100).toFixed(0)}%</span>
                               </div>
                             ))}
+                          </div>
+                          {/* Editable emotions to save */}
+                          <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                              Cảm xúc sẽ lưu
+                              <span className="font-normal text-slate-400 ml-1">(AI pre-chọn {">"}10%, bạn có thể điều chỉnh)</span>
+                            </p>
+                            <EmotionPicker
+                              value={r.selectedEmotions}
+                              onChange={selected => setAiResults(prev =>
+                                prev.map((x, j) => j === i ? { ...x, selectedEmotions: selected } : x)
+                              )}
+                            />
                           </div>
                         </div>
                       ))}
@@ -878,9 +1023,7 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {paginatedClips.map(clip => {
-                      const colors = EMOTION_COLORS[clip.targetEmotion] ?? EMOTION_COLORS.neutral;
-                      return (
+                    {paginatedClips.map(clip => (
                         <tr key={clip.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 group">
                           <td className="px-6 py-4 text-slate-500">{clip.order}</td>
                           <td className="px-6 py-4">
@@ -892,9 +1035,7 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${colors.bg} ${colors.text}`}>
-                              {clip.targetEmotion}
-                            </span>
+                            <EmotionBadges emotions={clip.emotions} />
                           </td>
                           <td className="px-6 py-4 text-slate-500">{formatDuration(clip.duration)}</td>
                           <td className="px-6 py-4 text-right">
@@ -925,8 +1066,7 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                             </div>
                           </td>
                         </tr>
-                      );
-                    })}
+                      ))}
                   </tbody>
                 </table>
                 <Pagination page={clipPage} total={clips.length} pageSize={CLIP_PAGE_SIZE} onChange={setClipPage} />
@@ -983,18 +1123,9 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
                 <input className={inputCls} type="number" min="1" value={editLessonForm.order} onChange={e => setEditLessonForm(f => ({ ...f, order: e.target.value }))} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Thời lượng (giây)</label>
-                <input className={inputCls} type="number" min="0" value={editLessonForm.duration} onChange={e => setEditLessonForm(f => ({ ...f, duration: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Trạng thái</label>
-                <select className={inputCls} value={editLessonForm.status} onChange={e => setEditLessonForm(f => ({ ...f, status: e.target.value }))}>
-                  <option value="active">Hoạt động</option>
-                  <option value="inactive">Vô hiệu</option>
-                </select>
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Thời lượng (giây)</label>
+              <input className={inputCls} type="number" min="0" value={editLessonForm.duration} onChange={e => setEditLessonForm(f => ({ ...f, duration: e.target.value }))} />
             </div>
             {editLessonError && <p className="text-red-500 text-sm">{editLessonError}</p>}
             <div className="flex gap-3 pt-2">
@@ -1016,17 +1147,18 @@ export default function LessonManagement({ courseId }: { courseId?: string }) {
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Chủ đề</label>
               <input className={inputCls} value={editClipForm.subject} onChange={e => setEditClipForm(f => ({ ...f, subject: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Cảm xúc mục tiêu</label>
-                <select className={inputCls} value={editClipForm.targetEmotion} onChange={e => setEditClipForm(f => ({ ...f, targetEmotion: e.target.value }))}>
-                  {EMOTIONS.map(e => <option key={e} value={e}>{e}</option>)}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Thứ tự</label>
-                <input className={inputCls} type="number" min="1" value={editClipForm.order} onChange={e => setEditClipForm(f => ({ ...f, order: e.target.value }))} />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Thứ tự</label>
+              <input className={inputCls} type="number" min="1" value={editClipForm.order} onChange={e => setEditClipForm(f => ({ ...f, order: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Cảm xúc có trong clip
+              </label>
+              <EmotionToggleGroup
+                value={editClipForm.emotionSet}
+                onChange={emotionSet => setEditClipForm(f => ({ ...f, emotionSet }))}
+              />
             </div>
             {editClipError && <p className="text-red-500 text-sm">{editClipError}</p>}
             <div className="flex gap-3 pt-2">

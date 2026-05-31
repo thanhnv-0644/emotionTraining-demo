@@ -19,8 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,39 +44,59 @@ public class ProgressService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
 
-        // Calculate score: count answers matching targetEmotion of each audio clip
+        // Calculate score: any emotion present in the clip's emotions map is a valid answer
         List<AudioClip> clips = audioClipRepository.findByLessonIdOrderByOrder(lessonId);
-        Map<String, String> clipEmotionMap = clips.stream()
-                .filter(c -> c.getTargetEmotion() != null)
+        Map<String, Set<String>> clipEmotionsMap = clips.stream()
+                .filter(c -> c.getEmotions() != null)
                 .collect(Collectors.toMap(
                         AudioClip::getId,
-                        c -> c.getTargetEmotion().name()
+                        c -> emotionKeys(c.getEmotions())
                 ));
 
-        int score = 0;
+        // Group user selections per clip, then exact-match against valid emotions
+        Map<String, Set<String>> userSelectionsByClip = new HashMap<>();
         for (SubmitProgressRequest.AnswerItem answer : request.getAnswers()) {
-            String expected = clipEmotionMap.get(answer.getAudioClipId());
-            if (expected != null && expected.equalsIgnoreCase(answer.getSelectedEmotion())) {
-                score++;
+            userSelectionsByClip
+                    .computeIfAbsent(answer.getAudioClipId(), k -> new HashSet<>())
+                    .add(answer.getSelectedEmotion().toLowerCase());
+        }
+
+        // Correct only when user selected exactly the valid emotions (no more, no less)
+        Set<String> correctClips = new HashSet<>();
+        for (Map.Entry<String, Set<String>> entry : userSelectionsByClip.entrySet()) {
+            Set<String> valid = clipEmotionsMap.get(entry.getKey());
+            if (valid == null) continue;
+            Set<String> validLower = valid.stream()
+                    .map(String::toLowerCase)
+                    .collect(Collectors.toSet());
+            if (entry.getValue().equals(validLower)) {
+                correctClips.add(entry.getKey());
             }
         }
         int totalClips = clips.size();
-        score = totalClips > 0 ? (int) Math.round(score * 100.0 / totalClips) : 0;
+        int score = totalClips > 0 ? (int) Math.round(correctClips.size() * 100.0 / totalClips) : 0;
 
         // Determine attempt number
         List<UserProgress> previousAttempts = userProgressRepository.findByUserIdAndLessonId(userId, lessonId);
         int attemptNumber = previousAttempts.size() + 1;
 
-        // Serialize answers to JSON — format Analytics có thể đọc được
+        // Serialize answers to JSON — grouped by clip
         String answersJson;
         try {
-            List<Map<String, String>> enriched = request.getAnswers().stream()
-                    .map(a -> Map.of(
-                            "audioClipId",    a.getAudioClipId(),
-                            "correctAnswer",  clipEmotionMap.getOrDefault(a.getAudioClipId(), ""),
-                            "userAnswer",     a.getSelectedEmotion()
-                    ))
-                    .collect(Collectors.toList());
+            List<Map<String, Object>> enriched = clips.stream().map(clip -> {
+                Set<String> valid = clipEmotionsMap.getOrDefault(clip.getId(), Set.of());
+                List<String> userSelections = request.getAnswers().stream()
+                        .filter(a -> a.getAudioClipId().equals(clip.getId()))
+                        .map(SubmitProgressRequest.AnswerItem::getSelectedEmotion)
+                        .collect(Collectors.toList());
+                boolean isCorrect = correctClips.contains(clip.getId());
+                return Map.<String, Object>of(
+                        "audioClipId",    clip.getId(),
+                        "correctAnswers", valid,
+                        "userAnswers",    userSelections,
+                        "isCorrect",      isCorrect
+                );
+            }).collect(Collectors.toList());
             answersJson = objectMapper.writeValueAsString(Map.of("answers", enriched));
         } catch (JsonProcessingException e) {
             answersJson = "{\"answers\":[]}";
@@ -137,5 +160,15 @@ public class ProgressService {
                 .answers(p.getAnswers())
                 .createdAt(p.getCreatedAt())
                 .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<String> emotionKeys(String emotionsJson) {
+        try {
+            Map<String, Double> map = objectMapper.readValue(emotionsJson, Map.class);
+            return map.keySet();
+        } catch (JsonProcessingException e) {
+            return Set.of();
+        }
     }
 }

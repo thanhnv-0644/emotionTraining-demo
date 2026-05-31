@@ -3,6 +3,9 @@ import { useEffect, useState, ReactNode, useMemo, useRef } from 'react';
 import { api, BASE_URL } from '@/lib/api';
 import UserLayout from '@/components/UserLayout';
 import AppPageHeader from '@/components/AppPageHeader';
+import Pagination from '@/components/Pagination';
+
+const PAGE_SIZE = 9;
 
 const LEVEL_CONFIG: Record<string, { label: string; className: string }> = {
   easy: { label: 'Dễ', className: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' },
@@ -165,6 +168,7 @@ export default function Courses() {
   const [payingId, setPayingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [coursePage, setCoursePage] = useState(1);
 
   // Search history
   const [history, setHistory] = useState<SearchHistory[]>([]);
@@ -326,7 +330,7 @@ export default function Courses() {
           <input
             type="text"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setCoursePage(1); }}
             onFocus={() => setShowHistory(true)}
             onKeyDown={handleSearchKeyDown}
             placeholder="Tìm kiếm khoá học..."
@@ -378,13 +382,13 @@ export default function Courses() {
 
         <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800">
           <button
-            onClick={() => { setTab('enrolled'); setSearch(''); }}
+            onClick={() => { setTab('enrolled'); setSearch(''); setCoursePage(1); }}
             className={`px-4 py-3 text-sm font-bold transition-colors ${tab === 'enrolled' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'}`}
           >
             Đang học ({enrolledCourses.length})
           </button>
           <button
-            onClick={() => { setTab('explore'); setSearch(''); }}
+            onClick={() => { setTab('explore'); setSearch(''); setCoursePage(1); }}
             className={`px-4 py-3 text-sm font-bold transition-colors ${tab === 'explore' ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'}`}
           >
             Khám phá ({exploreCourses.length})
@@ -418,9 +422,15 @@ export default function Courses() {
                 <p className="text-slate-500">Không tìm thấy khoá học cho &ldquo;{search}&rdquo;.</p>
               </div>
             ) : (
-              <CourseGrid courses={exactCourses} tab={tab} ratings={ratings}
-                enrollingId={enrollingId} payingId={payingId}
-                onEnroll={handleEnroll} onBuy={handleBuy} />
+              <>
+                <CourseGrid
+                  courses={exactCourses.slice((coursePage - 1) * PAGE_SIZE, coursePage * PAGE_SIZE)}
+                  tab={tab} ratings={ratings}
+                  enrollingId={enrollingId} payingId={payingId}
+                  onEnroll={handleEnroll} onBuy={handleBuy}
+                />
+                <Pagination page={coursePage} total={exactCourses.length} pageSize={PAGE_SIZE} onChange={p => { setCoursePage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+              </>
             )}
 
             {/* ── Khoá học liên quan (fuzzy) ── */}

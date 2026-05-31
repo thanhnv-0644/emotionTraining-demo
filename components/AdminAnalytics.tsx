@@ -50,7 +50,7 @@ interface AdminAnalyticsData {
 // ─── Constants ───────────────────────────────────────────────────────────────
 const EMOTION_LABELS: Record<string, string> = {
   happiness: "Hạnh phúc", sadness: "Buồn bã", anger: "Tức giận",
-  surprise: "Ngạc nhiên", fear: "Sợ hãi", disgust: "Ghê tởm", neutral: "Bình thản",
+  surprise: "Ngạc nhiên", fear: "Sợ hãi", neutral: "Bình thản",
 };
 
 const ROLE_COLORS: Record<string, string> = {

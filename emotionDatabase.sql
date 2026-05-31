@@ -81,7 +81,7 @@ CREATE TABLE `audio_clips` (
   `subject`       VARCHAR(255) NOT NULL,
   `audioUrl`      VARCHAR(500) NOT NULL,
   `duration`      INT              NULL COMMENT 'seconds',
-  `targetEmotion` ENUM('happiness','sadness','anger','fear','surprise','disgust','neutral') NOT NULL,
+  `emotions`      TEXT                                                                         NULL COMMENT 'JSON: {"happiness":0.72,"sadness":0.18,...} — chỉ emotion >10%',
   `order`         INT          NOT NULL DEFAULT 0,
   `createdAt`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

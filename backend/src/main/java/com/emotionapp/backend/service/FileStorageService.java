@@ -17,15 +17,24 @@ public class FileStorageService {
     private String uploadDir;
 
     public String saveFile(MultipartFile file) throws IOException {
-        Path uploadPath = Paths.get(uploadDir);
+        return saveToDir(file, uploadDir, "/uploads/audio/");
+    }
+
+    public String saveAvatar(MultipartFile file) throws IOException {
+        return saveToDir(file, uploadDir.replace("audio", "avatars"), "/uploads/avatars/");
+    }
+
+    public String saveCourseImage(MultipartFile file) throws IOException {
+        return saveToDir(file, uploadDir.replace("audio", "courses"), "/uploads/courses/");
+    }
+
+    private String saveToDir(MultipartFile file, String dir, String urlPrefix) throws IOException {
+        Path uploadPath = Paths.get(dir);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
-
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
-        Files.copy(file.getInputStream(), filePath);
-
-        return "/uploads/audio/" + fileName;
+        Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
+        return urlPrefix + fileName;
     }
 }

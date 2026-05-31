@@ -1,6 +1,7 @@
 package com.emotionapp.backend.service;
 
 import com.emotionapp.backend.dto.request.AdminUpdateUserRequest;
+import com.emotionapp.backend.dto.request.ChangePasswordRequest;
 import com.emotionapp.backend.dto.request.UpdateProfileRequest;
 import com.emotionapp.backend.dto.response.UserResponse;
 import com.emotionapp.backend.entity.User;
@@ -8,6 +9,7 @@ import com.emotionapp.backend.exception.AppException;
 import com.emotionapp.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UserResponse getMe(String userId) {
         User user = userRepository.findById(userId)
@@ -88,6 +91,21 @@ public class UserService {
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
         return toResponse(user);
+    }
+
+    @Transactional
+    public void changePassword(String userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không đúng");
+        }
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mật khẩu mới phải có ít nhất 6 ký tự");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     @Transactional

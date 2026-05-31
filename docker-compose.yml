@@ -1,0 +1,80 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: emotion_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: emotion_database
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: emotion_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/emotion_database?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATION: 3600000
+      JWT_REFRESH_TOKEN_EXPIRATION: 604800000
+      AI_SERVICE_URL: http://ai:8000/predict
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET}
+      VNPAY_PAYMENT_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+      VNPAY_RETURN_URL: ${VNPAY_RETURN_URL}
+      VNPAY_API_URL: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+      APP_UPLOAD_DIR: uploads/audio
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "8080:8080"
+    networks:
+      - app_network
+
+  ai:
+    build:
+      context: ./AI
+      dockerfile: Dockerfile
+    container_name: emotion_ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    networks:
+      - app_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://${SERVER_IP}:8080
+    container_name: emotion_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - app_network
+
+volumes:
+  mysql_data:
+  uploads_data:
+
+networks:
+  app_network:
+    driver: bridge
