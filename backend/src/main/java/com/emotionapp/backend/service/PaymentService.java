@@ -278,14 +278,33 @@ public class PaymentService {
 
     // ─── Mapper ───────────────────────────────────────────────────────────────
 
+    /**
+     * Mỗi ngày lúc 3 giờ sáng: xóa các payment đã expired/failed/cancelled quá 3 ngày.
+     */
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void deleteOldClosedPayments() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(3);
+        List<Payment> toDelete = paymentRepository.findAll().stream()
+                .filter(p -> p.getStatus() == Payment.Status.expired
+                          || p.getStatus() == Payment.Status.failed
+                          || p.getStatus() == Payment.Status.cancelled)
+                .filter(p -> p.getUpdatedAt() != null && p.getUpdatedAt().isBefore(cutoff))
+                .collect(Collectors.toList());
+        if (toDelete.isEmpty()) return;
+        paymentRepository.deleteAll(toDelete);
+        log.info("Deleted {} old closed payment(s) (expired/failed/cancelled > 3 days)", toDelete.size());
+    }
+
     private PaymentResponse toResponse(Payment p, String paymentUrl) {
         return PaymentResponse.builder()
                 .id(p.getId())
+                .userId(p.getUser().getId())
+                .userName(p.getUser().getName())
                 .courseId(p.getCourse().getId())
                 .courseTitle(p.getCourse().getTitle())
                 .amount(p.getAmount())
                 .currency(p.getCurrency())
-                .method(p.getMethod().name())
                 .status(p.getStatus().name())
                 .transactionId(p.getTransactionId())
                 .failureReason(p.getFailureReason())

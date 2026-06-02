@@ -8,11 +8,12 @@ const PAGE_SIZE = 10;
 
 interface PaymentResponse {
   id: string;
+  userId: string;
+  userName: string;
   courseId: string;
   courseTitle: string;
   amount: number;
   currency: string;
-  method: string;
   status: string;
   transactionId: string | null;
   failureReason: string | null;
@@ -55,6 +56,7 @@ export default function AdminPayments() {
 
   const filtered = payments.filter(p =>
     p.courseTitle?.toLowerCase().includes(search.toLowerCase()) ||
+    p.userName?.toLowerCase().includes(search.toLowerCase()) ||
     p.transactionId?.toLowerCase().includes(search.toLowerCase()) ||
     p.id?.toLowerCase().includes(search.toLowerCase())
   );
@@ -99,7 +101,7 @@ export default function AdminPayments() {
               type="text"
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Tìm mã GD, khoá học..."
+              placeholder="Tìm mã GD, người học, khoá học..."
               className="pl-9 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-primary focus:border-primary w-64"
             />
           </div>
@@ -121,8 +123,8 @@ export default function AdminPayments() {
               <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase font-bold text-slate-500 border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="px-6 py-4">Mã GD</th>
+                  <th className="px-6 py-4">Người học</th>
                   <th className="px-6 py-4">Khoá học</th>
-                  <th className="px-6 py-4">Phương thức</th>
                   <th className="px-6 py-4">Số tiền</th>
                   <th className="px-6 py-4">Trạng thái</th>
                   <th className="px-6 py-4">Thời gian</th>
@@ -148,10 +150,10 @@ export default function AdminPayments() {
                         <div className="font-mono text-xs text-slate-500">{p.transactionId ?? p.id.slice(0, 12) + '...'}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-medium text-slate-900 dark:text-slate-100 line-clamp-1">{p.courseTitle}</span>
+                        <span className="font-medium text-slate-900 dark:text-slate-100">{p.userName ?? '—'}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="uppercase text-xs font-bold text-slate-500">{p.method ?? '—'}</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300 line-clamp-1">{p.courseTitle}</span>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`font-bold ${p.status === 'completed' ? 'text-emerald-600' : 'text-slate-700 dark:text-slate-300'}`}>

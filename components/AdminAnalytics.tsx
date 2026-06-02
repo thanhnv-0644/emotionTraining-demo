@@ -168,9 +168,11 @@ export default function AdminAnalytics() {
     month: shortMonth(r.month), count: r.count,
   }));
 
-  const radarData = Object.entries(data?.emotionAccuracy ?? {}).map(([key, val]) => ({
-    emotion: EMOTION_LABELS[key] ?? key, accuracy: val,
-  }));
+  const radarData = Object.entries(data?.emotionAccuracy ?? {})
+    .filter(([key]) => key !== 'disgust')
+    .map(([key, val]) => ({
+      emotion: EMOTION_LABELS[key] ?? key, accuracy: val,
+    }));
 
   const pieData = Object.entries(data?.roleDistribution ?? {}).map(([role, count]) => ({
     name: ROLE_LABELS[role] ?? role, value: count, color: ROLE_COLORS[role] ?? "#94a3b8",
