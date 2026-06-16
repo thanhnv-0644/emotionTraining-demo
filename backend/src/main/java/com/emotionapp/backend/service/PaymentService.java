@@ -284,6 +284,12 @@ public class PaymentService {
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void deleteOldClosedPayments() {
+        manualCleanup();
+    }
+
+    /** Gọi thủ công từ admin — trả về số lượng đã xóa. */
+    @Transactional
+    public int manualCleanup() {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(3);
         List<Payment> toDelete = paymentRepository.findAll().stream()
                 .filter(p -> p.getStatus() == Payment.Status.expired
@@ -291,9 +297,22 @@ public class PaymentService {
                           || p.getStatus() == Payment.Status.cancelled)
                 .filter(p -> p.getUpdatedAt() != null && p.getUpdatedAt().isBefore(cutoff))
                 .collect(Collectors.toList());
-        if (toDelete.isEmpty()) return;
+        if (toDelete.isEmpty()) return 0;
         paymentRepository.deleteAll(toDelete);
         log.info("Deleted {} old closed payment(s) (expired/failed/cancelled > 3 days)", toDelete.size());
+        return toDelete.size();
+    }
+
+    /** Preview — số lượng payments sẽ bị xóa nếu cleanup ngay bây giờ. */
+    @Transactional(readOnly = true)
+    public long previewCleanup() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(3);
+        return paymentRepository.findAll().stream()
+                .filter(p -> p.getStatus() == Payment.Status.expired
+                          || p.getStatus() == Payment.Status.failed
+                          || p.getStatus() == Payment.Status.cancelled)
+                .filter(p -> p.getUpdatedAt() != null && p.getUpdatedAt().isBefore(cutoff))
+                .count();
     }
 
     private PaymentResponse toResponse(Payment p, String paymentUrl) {
