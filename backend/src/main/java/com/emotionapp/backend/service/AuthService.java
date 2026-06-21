@@ -33,6 +33,7 @@ public class AuthService {
             throw new AppException(HttpStatus.CONFLICT, "Email already in use");
         }
 
+        LocalDateTime now = LocalDateTime.now();
         User user = User.builder()
                 .id(IdGenerator.generateId())
                 .name(request.getName())
@@ -41,7 +42,8 @@ public class AuthService {
                 .role(User.Role.student)
                 .xp(0)
                 .status(User.Status.active)
-                .createdAt(LocalDateTime.now())
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
 
         userRepository.save(user);
@@ -67,6 +69,7 @@ public class AuthService {
         }
 
         user.setLastActiveAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
         return buildAuthResponse(user);

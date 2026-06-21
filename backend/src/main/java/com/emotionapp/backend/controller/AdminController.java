@@ -236,11 +236,12 @@ public class AdminController {
                 : paymentRepository.findAll();
         List<PaymentResponse> result = payments.stream().map(p -> PaymentResponse.builder()
                 .id(p.getId())
+                .userId(p.getUser().getId())
+                .userName(p.getUser().getName())
                 .courseId(p.getCourse().getId())
                 .courseTitle(p.getCourse().getTitle())
                 .amount(p.getAmount())
                 .currency(p.getCurrency())
-                .method(p.getMethod() != null ? p.getMethod().name() : null)
                 .status(p.getStatus().name())
                 .transactionId(p.getTransactionId())
                 .failureReason(p.getFailureReason())

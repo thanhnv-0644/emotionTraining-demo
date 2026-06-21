@@ -99,9 +99,11 @@ export default function Analytics() {
   // ── Derived data ──────────────────────────────────────────────
 
   // Radar chart data
-  const radarData = Object.entries(analytics?.emotionAccuracy ?? {}).map(([k, v]) => ({
-    emotion: EMOTION_LABELS[k] ?? k,
-    value: v.accuracy,
+  const radarData = Object.entries(analytics?.emotionAccuracy ?? {})
+    .filter(([k]) => k !== 'disgust')
+    .map(([k, v]) => ({
+      emotion: EMOTION_LABELS[k] ?? k,
+      value: v.accuracy,
     fullMark: 100,
   }));
 
