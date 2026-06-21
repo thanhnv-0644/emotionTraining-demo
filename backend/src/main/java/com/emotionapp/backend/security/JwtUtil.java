@@ -48,6 +48,7 @@ public class JwtUtil implements IJwtService {
         return Jwts.builder()
                 .subject(userId)
                 .claim("type", "refresh")
+                .id(java.util.UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(getSigningKey())

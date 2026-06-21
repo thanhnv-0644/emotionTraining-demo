@@ -13,7 +13,10 @@ public class SubmitProgressRequest {
 
     @Data
     public static class AnswerItem {
+        @NotNull(message = "audioClipId is required")
         private String audioClipId;
+
+        @NotNull(message = "selectedEmotion is required")
         private String selectedEmotion;
     }
 }

@@ -57,6 +57,10 @@ public class ProgressService {
         // Group user selections per clip, then exact-match against valid emotions
         Map<String, Set<String>> userSelectionsByClip = new HashMap<>();
         for (SubmitProgressRequest.AnswerItem answer : request.getAnswers()) {
+            if (answer.getAudioClipId() == null || answer.getSelectedEmotion() == null) {
+                throw new AppException(HttpStatus.BAD_REQUEST,
+                        "Each answer must have audioClipId and selectedEmotion");
+            }
             userSelectionsByClip
                     .computeIfAbsent(answer.getAudioClipId(), k -> new HashSet<>())
                     .add(answer.getSelectedEmotion().toLowerCase());

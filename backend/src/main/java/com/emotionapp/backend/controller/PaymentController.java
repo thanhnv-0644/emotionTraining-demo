@@ -5,6 +5,7 @@ import com.emotionapp.backend.dto.response.ApiResponse;
 import com.emotionapp.backend.dto.response.PaymentResponse;
 import com.emotionapp.backend.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,7 +25,7 @@ public class PaymentController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<PaymentResponse>> createPayment(
-            @RequestBody CreatePaymentRequest request,
+            @Valid @RequestBody CreatePaymentRequest request,
             HttpServletRequest httpRequest) {
         String userId = getCurrentUserId();
         String ipAddr = getClientIp(httpRequest);
