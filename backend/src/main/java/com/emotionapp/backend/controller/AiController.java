@@ -2,6 +2,7 @@ package com.emotionapp.backend.controller;
 
 import com.emotionapp.backend.dto.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
@@ -19,7 +20,8 @@ import java.util.List;
 @RequestMapping("/api/admin/ai")
 public class AiController {
 
-    private static final String AI_SERVICE_URL = "http://localhost:8000/predict";
+    @Value("${ai.service.url:http://localhost:8000/predict}")
+    private String aiServiceUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -50,7 +52,7 @@ public class AiController {
 
             HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
             ResponseEntity<List<Object>> response = restTemplate.exchange(
-                    AI_SERVICE_URL, HttpMethod.POST, request,
+                    aiServiceUrl, HttpMethod.POST, request,
                     new org.springframework.core.ParameterizedTypeReference<List<Object>>() {});
 
             return ResponseEntity.ok(ApiResponse.success(response.getBody()));
