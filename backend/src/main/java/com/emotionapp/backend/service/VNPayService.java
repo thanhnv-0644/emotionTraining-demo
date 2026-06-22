@@ -8,7 +8,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,7 +33,7 @@ public class VNPayService {
     private String returnUrl;
 
     public String buildPaymentUrl(Payment payment, String ipAddr) {
-        LocalDateTime now = LocalDateTime.now();
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
 
         Map<String, String> params = new TreeMap<>();
         params.put("vnp_Version",    "2.1.0");
