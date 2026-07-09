@@ -19,6 +19,7 @@ public class ProgressResponse {
     private String lessonTitle;
     private Integer attemptNumber;
     private Integer score;
+    private Integer xpEarned;
     private LocalDateTime completedAt;
     private String answers;
     private LocalDateTime createdAt;
