@@ -100,8 +100,10 @@ public class CourseService {
         if (request.getTitle() != null) course.setTitle(request.getTitle());
         if (request.getDescription() != null) course.setDescription(request.getDescription());
         if (request.getImage() != null) course.setImage(request.getImage());
-        course.setPrice(request.getPrice());
-        course.setFree(request.getPrice() == 0);
+        if (request.getPrice() != null) {
+            course.setPrice(request.getPrice());
+            course.setFree(request.getPrice() == 0);
+        }
 
         if (request.getStatus() != null) {
             try {
