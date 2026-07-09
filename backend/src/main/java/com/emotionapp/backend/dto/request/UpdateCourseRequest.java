@@ -7,7 +7,7 @@ public class UpdateCourseRequest {
     private String title;
     private String description;
     private String image;
-    private int price;
+    private Integer price;
     private String status;
     private String category;
 }
