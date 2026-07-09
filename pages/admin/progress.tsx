@@ -271,10 +271,12 @@ export default function AdminProgress() {
     }
   };
 
-  const filtered = progresses.filter(p =>
-    p.lessonTitle?.toLowerCase().includes(search.toLowerCase()) ||
-    p.userName?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = progresses
+    .filter(p =>
+      p.lessonTitle?.toLowerCase().includes(search.toLowerCase()) ||
+      p.userName?.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => new Date(b.completedAt ?? b.createdAt).getTime() - new Date(a.completedAt ?? a.createdAt).getTime());
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const avgScore = filtered.length

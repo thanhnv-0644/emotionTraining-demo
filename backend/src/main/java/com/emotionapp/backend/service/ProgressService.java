@@ -55,6 +55,7 @@ public class ProgressService {
 
         userProgressRepository.save(progress);
 
+        int xpEarned = 0;
         if (attemptNumber == 1) {
             int baseXp = switch (lesson.getLevel()) {
                 case intermediate -> 20;
@@ -62,30 +63,30 @@ public class ProgressService {
                 default           -> 10;
             };
             int bonus = grading.getScore() >= 80 ? baseXp / 2 : 0;
-            int xpGain = baseXp + bonus;
+            xpEarned = baseXp + bonus;
 
-            user.setXp((user.getXp() == null ? 0 : user.getXp()) + xpGain);
+            user.setXp((user.getXp() == null ? 0 : user.getXp()) + xpEarned);
             userRepository.save(user);
         }
 
-        return toResponse(progress);
+        return toResponse(progress, xpEarned);
     }
 
     public List<ProgressResponse> getMyProgress(String userId) {
         return userProgressRepository.findByUserId(userId)
                 .stream()
-                .map(this::toResponse)
+                .map(p -> toResponse(p, 0))
                 .collect(Collectors.toList());
     }
 
     public List<ProgressResponse> getProgressByLesson(String lessonId, String userId) {
         return userProgressRepository.findByUserIdAndLessonId(userId, lessonId)
                 .stream()
-                .map(this::toResponse)
+                .map(p -> toResponse(p, 0))
                 .collect(Collectors.toList());
     }
 
-    private ProgressResponse toResponse(UserProgress p) {
+    private ProgressResponse toResponse(UserProgress p, int xpEarned) {
         return ProgressResponse.builder()
                 .id(p.getId())
                 .userId(p.getUser().getId())
@@ -94,6 +95,7 @@ public class ProgressService {
                 .lessonTitle(p.getLesson().getTitle())
                 .attemptNumber(p.getAttemptNumber())
                 .score(p.getScore())
+                .xpEarned(xpEarned)
                 .completedAt(p.getCompletedAt())
                 .answers(p.getAnswers())
                 .createdAt(p.getCreatedAt())
