@@ -28,8 +28,9 @@ interface AudioClip {
 
 interface ParsedAnswer {
   audioClipId: string;
-  correctAnswer: string;
-  userAnswer: string | null;
+  correctAnswers: string[];
+  userAnswers: string[];
+  isCorrect: boolean;
 }
 
 interface UserOption { id: string; name: string; email: string; }
@@ -100,8 +101,8 @@ function ProgressDetail({ progress, clips, clipsLoading }: {
   );
 
   const clipMap = Object.fromEntries(clips.map(c => [c.id, c]));
-  const correctCount = answers.filter(a => a.userAnswer && a.userAnswer === a.correctAnswer).length;
-  const skippedCount = answers.filter(a => !a.userAnswer).length;
+  const correctCount = answers.filter(a => a.isCorrect).length;
+  const skippedCount = answers.filter(a => !a.userAnswers?.length).length;
 
   return (
     <div>
@@ -127,8 +128,8 @@ function ProgressDetail({ progress, clips, clipsLoading }: {
       <div className="space-y-2">
         {answers.map((a, i) => {
           const clip = clipMap[a.audioClipId];
-          const isCorrect = a.userAnswer && a.userAnswer === a.correctAnswer;
-          const isSkipped = !a.userAnswer;
+          const isCorrect = a.isCorrect;
+          const isSkipped = !a.userAnswers?.length;
           const isExpanded = expandedClip === i;
 
           const rowBorder = isCorrect
@@ -165,7 +166,7 @@ function ProgressDetail({ progress, clips, clipsLoading }: {
                 </span>
 
                 {/* Badge */}
-                <ResultBadge userAnswer={a.userAnswer ?? null} correctAnswer={a.correctAnswer} />
+                <ResultBadge userAnswer={a.userAnswers?.[0] ?? null} correctAnswer={a.correctAnswers?.[0] ?? ''} />
 
                 {/* Expand chevron */}
                 <span className={`material-symbols-outlined text-slate-400 text-base transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}>
@@ -186,7 +187,7 @@ function ProgressDetail({ progress, clips, clipsLoading }: {
                       <p className="text-xs font-semibold text-slate-500 mb-2">Đáp án của học viên</p>
                       <div className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800/50">
                         <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
-                          {EMOTION_VI[a.userAnswer!] ?? a.userAnswer}
+                          {a.userAnswers.map(e => EMOTION_VI[e] ?? e).join(' + ')}
                         </p>
                         <AnswerBar pct={100} color="bg-emerald-500" />
                         <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">100%</p>
@@ -198,7 +199,7 @@ function ProgressDetail({ progress, clips, clipsLoading }: {
                         <p className="text-xs font-semibold text-slate-500 mb-2">Đáp án của học viên</p>
                         <div className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-red-200 dark:border-red-800/50 h-full">
                           <p className="text-sm font-bold text-red-600 dark:text-red-400">
-                            {EMOTION_VI[a.userAnswer!] ?? a.userAnswer}
+                            {a.userAnswers.map(e => EMOTION_VI[e] ?? e).join(' + ')}
                           </p>
                           <AnswerBar pct={20} color="bg-red-400" />
                           <p className="text-xs text-red-500 mt-1">Không đúng</p>
@@ -208,7 +209,7 @@ function ProgressDetail({ progress, clips, clipsLoading }: {
                         <p className="text-xs font-semibold text-slate-500 mb-2">Đáp án đúng</p>
                         <div className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800/50 h-full">
                           <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
-                            {EMOTION_VI[a.correctAnswer] ?? a.correctAnswer}
+                            {a.correctAnswers.map(e => EMOTION_VI[e] ?? e).join(' + ')}
                           </p>
                           <AnswerBar pct={100} color="bg-emerald-500" />
                           <p className="text-xs text-emerald-600 mt-1">100%</p>
@@ -216,10 +217,10 @@ function ProgressDetail({ progress, clips, clipsLoading }: {
                       </div>
                     </div>
                   )}
-                  {clip && (
+                  {a.correctAnswers?.length > 0 && (
                     <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
                       <span className="material-symbols-outlined text-xs">graphic_eq</span>
-                      Cảm xúc mục tiêu: <span className="font-medium">{EMOTION_VI[clip.targetEmotion] ?? clip.targetEmotion}</span>
+                      Cảm xúc mục tiêu: <span className="font-medium">{a.correctAnswers.map(e => EMOTION_VI[e] ?? e).join(' / ')}</span>
                     </p>
                   )}
                 </div>
